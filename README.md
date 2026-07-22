@@ -119,8 +119,8 @@ Here is the exact pin configuration used to wire the ZYRA satellite to an **ESP3
 
 1. Clone this repository:
    ```bash
-   git clone https://github.com/vishu2212/Voice_Assistant_KIYARI.git
-   cd Voice_Assistant_KIYARI/backend
+   git clone https://github.com/vishu2212/jarvis-ai-assistant.git
+   cd jarvis-ai-assistant/backend
    ```
 2. Create and activate a Python virtual environment:
    ```bash
