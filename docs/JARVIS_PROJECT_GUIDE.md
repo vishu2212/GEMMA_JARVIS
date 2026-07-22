@@ -1,12 +1,12 @@
-# ZYRA Smart Voice Companion - Project & Technical Guide
+# JARVIS Smart Voice Companion - Project & Technical Guide
 
-Welcome to the technical guide for your **ZYRA Smart Voice Companion**! This document provides a complete breakdown of the project architecture, frameworks, and drivers used to build it, along with a blueprint of future enhancements to make it fully portable without a laptop or Wi-Fi.
+Welcome to the technical guide for your **JARVIS Smart Voice Companion**! This document provides a complete breakdown of the project architecture, frameworks, and drivers used to build it, along with a blueprint of future enhancements to make it fully portable without a laptop or Wi-Fi.
 
 ---
 
 ## 1. Project Overview & Architectural Design
 
-The ZYRA Voice Assistant is a completely offline, low-latency, general-purpose voice companion designed for smart home, IoT, robotics, and embedded AI tasks.
+The JARVIS Voice Assistant is a completely offline, low-latency, general-purpose voice companion designed for smart home, IoT, robotics, and embedded AI tasks.
 
 ### System Topology
 *   **Hardware Client (Satellite):** ESP32-S3 DevKitC-1 microcontroller equipped with an INMP441 I2S Microphone, a MAX98357A I2S Audio Amplifier & Speaker, and a 128x64 SSD1306 OLED Screen.
@@ -48,7 +48,7 @@ The backend is built in **Python 3.13** using **FastAPI** and runs entirely offl
 
 ## 4. Future Scope: Complete Portability (No Laptop or Wi-Fi)
 
-To make the ZYRA assistant completely portable—a pocket-sized standalone device that requires no laptop, external router, or Wi-Fi—the following upgrades can be implemented:
+To make the JARVIS assistant completely portable—a pocket-sized standalone device that requires no laptop, external router, or Wi-Fi—the following upgrades can be implemented:
 
 ### A. On-Chip Inference (Voice Command Engine)
 *   Instead of sending audio to a server for speech-to-text, you can use the **ESP-Skainet** framework (Espressif's Intelligent Voice Assistant) or **TensorFlow Lite Micro** directly on the ESP32-S3.
@@ -59,7 +59,7 @@ To make the ZYRA assistant completely portable—a pocket-sized standalone devic
 *   This enables running highly quantized small-scale LLMs (such as a 1B parameter model) and local TTS directly inside the physical unit.
 
 ### C. Access Point (AP) Hotspot Mode
-*   Configure the ESP32-S3 firmware to act as a **Wi-Fi Access Point**. The board will broadcast its own Wi-Fi SSID (e.g. *"Zyra-Companion"*).
+*   Configure the ESP32-S3 firmware to act as a **Wi-Fi Access Point**. The board will broadcast its own Wi-Fi SSID (e.g. *"Jarvis-Companion"*).
 *   Your smartphone can connect to this network and host the backend server using an Android/iOS Python runner app (like Termux or Pyto). This eliminates the need for a laptop or external Wi-Fi router entirely.
 
 ### D. SPI MicroSD Card Integration

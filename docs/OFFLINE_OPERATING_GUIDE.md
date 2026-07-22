@@ -1,6 +1,6 @@
-# ZYRA Voice Assistant - Offline Operation Guide
+# JARVIS Voice Assistant - Offline Operation Guide
 
-Welcome to your offline voice assistant! This guide details how to set up, launch, and operate the ZYRA Voice Companion completely offline.
+Welcome to your offline voice assistant! This guide details how to set up, launch, and operate the JARVIS Voice Companion completely offline.
 
 ---
 
@@ -17,9 +17,9 @@ Ensure you have the following installed on your local development PC:
 ## 2. Launching the Backend Server
 
 1.  Open terminal or PowerShell.
-2.  Navigate to the ZYRA backend directory:
+2.  Navigate to the JARVIS backend directory:
     ```bash
-    cd c:\Users\VISHAV\OneDrive\Desktop\ZYRA\backend
+    cd backend
     ```
 3.  Activate the python virtual environment:
     ```powershell
@@ -30,19 +30,19 @@ Ensure you have the following installed on your local development PC:
     python server.py
     ```
     The server console logs will report:
-    `[INFO] [server] Initializing ZYRA Backend Application Lifespan...`
+    `[INFO] [server] Initializing JARVIS Backend Application Lifespan...`
 
 ---
 
-## 3. Operating the ZYRA Device
+## 3. Operating the JARVIS Device
 
-1.  **Power on the ZYRA Hardware:** Connect the ESP32-S3 DevKitC-1 development board via USB-C to a power source (your PC or a 5V charger).
+1.  **Power on the JARVIS Hardware:** Connect the ESP32-S3 DevKitC-1 development board via USB-C to a power source (your PC or a 5V charger).
 2.  **Visual Feedback (OLED):**
-    *   **Booting:** The screen displays `ZYRA` on line 1 and `Starting ZYRA...` on line 3.
+    *   **Booting:** The screen displays `JARVIS` on line 1 and `Starting JARVIS...` on line 3.
     *   **WiFi Connection:** The screen transitions to `Connecting WiFi...`.
-    *   **Ready:** Once connected, the screen displays `Ready. Say: 'Hey Zyra' or press BOOT`. The speaker plays the voice prompt: *"Hello, I am Zyra."*
+    *   **Ready:** Once connected, the screen displays `Ready. Say: 'Hey Jarvis' or press BOOT`. The speaker plays the voice prompt: *"Hello, I am Jarvis."*
 3.  **Wake Word:**
-    *   Say `"Hey Zyra"` to trigger the wake-word engine.
+    *   Say `"Hey Jarvis"` to trigger the wake-word engine.
     *   The assistant chime sounds and the display transitions to the siri-style dynamic wave representation: `Listening...`
 4.  **Hold-to-Talk (Manual Trigger):**
     *   Press and hold the physical **BOOT button (GPIO 0)** on the ESP32-S3 board.

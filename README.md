@@ -1,27 +1,27 @@
-# 🎙️ ZYRA — Modular AI-Powered Voice Companion
+# 🎙️ JARVIS — Modular AI-Powered Voice Companion
 
-> **Meet ZYRA:** A privacy-first, low-latency, modular AI voice companion built with hardware integration at heart. Powered by ESP32-S3, real-time WebSockets, local Speech-to-Text, local LLMs, and neural Text-to-Speech — 100% offline with zero cloud dependency!
+> **Meet JARVIS:** A privacy-first, low-latency, modular AI voice companion built with hardware integration at heart. Powered by ESP32-S3, real-time WebSockets, local Speech-to-Text, local LLMs, and neural Text-to-Speech — 100% offline with zero cloud dependency!
 
 ---
 
 ## 📸 Project Showcase
 
 ### 📸 Hardware Setup
-Here is the assembled ZYRA hardware satellite client featuring the ESP32-S3 microcontroller, INMP441 digital I2S microphone, MAX98357A DAC audio amplifier with speaker, and the OLED status display.
+Here is the assembled JARVIS hardware satellite client featuring the ESP32-S3 microcontroller, INMP441 digital I2S microphone, MAX98357A DAC audio amplifier with speaker, and the OLED status display.
 
-![ZYRA Hardware Setup](Screenshots/hardware.png)
+![JARVIS Hardware Setup](Screenshots/hardware.png)
 
 ---
 
 ### 🖥️ Backend Intelligence & Real-time Console
 The local FastAPI backend coordinating real-time WebSockets, audio streaming, Whisper transcription, local LLM responses, and Piper TTS synthesis.
 
-![ZYRA Backend Screenshot](Screenshots/Backend.png)
+![JARVIS Backend Screenshot](Screenshots/Backend.png)
 
 ---
 
 ### 🎬 Live Demo Video
-Experience ZYRA in action! Watch how ZYRA captures voice commands, processes reasoning locally, and responds with natural voice synthesis:
+Experience JARVIS in action! Watch how JARVIS captures voice commands, processes reasoning locally, and responds with natural voice synthesis:
 
 https://github.com/user-attachments/assets/demo-video
 
@@ -29,17 +29,17 @@ https://github.com/user-attachments/assets/demo-video
 
 ---
 
-## ✨ Why ZYRA? (A Humanised Perspective)
+## ✨ Why JARVIS? (A Humanised Perspective)
 
 Have you ever wanted an intelligent voice assistant like JARVIS or Alexa, but wished it was **completely private**, **fully customizable**, and didn't send every word spoken in your home to a distant cloud server?
 
-That is exactly why **ZYRA** was created!
+That is exactly why **JARVIS** was created!
 
-ZYRA splits the workload smartly between two partners:
+JARVIS splits the workload smartly between two partners:
 1. **The Satellite (Hardware Client):** A lightweight, low-cost ESP32-S3 microcontroller placed on your desk. It acts as the "ears, mouth, and eyes" of the assistant — capturing your voice via an INMP441 I2S mic, giving visual feedback on a tiny OLED screen, and speaking back through a clear I2S DAC speaker.
 2. **The Brain (Local PC Server):** A Python FastAPI server that runs locally on your PC. It takes raw digital audio over WebSockets, transcribes it in real-time with **Faster-Whisper**, thinks using **Qwen 2.5** (via LM Studio), and speaks back using human-sounding neural voices with **Piper TTS**.
 
-Whether you want a desk companion, a home automation trigger, or a voice interface for a robotics project, ZYRA gives you 100% control over every single line of code and piece of hardware.
+Whether you want a desk companion, a home automation trigger, or a voice interface for a robotics project, JARVIS gives you 100% control over every single line of code and piece of hardware.
 
 ---
 
@@ -73,7 +73,7 @@ graph TD
 - ⚡ **Ultra Low-Latency WebSockets:** Binary 16kHz PCM audio streaming over standard WebSockets ensures instant response times.
 - 🗣️ **Local Multilingual STT & TTS:** Handles English, Hindi, and Hinglish with Whisper transcription and Piper neural voice models (`en_US-lessac` and `hi_IN-pratham`).
 - 📺 **Dynamic OLED Visualizer:** Real-time state indicators (`Connecting`, `Ready`, `Listening...`, `Thinking...`, `Speaking...`) with animated visualizers and scrolling text.
-- 🎛️ **Dual Trigger Modes:** Choose between hands-free wake word activation ("Hey Zyra") or push-to-talk using the hardware BOOT button.
+- 🎛️ **Dual Trigger Modes:** Choose between hands-free wake word activation ("Hey Jarvis") or push-to-talk using the hardware BOOT button.
 - 🔊 **Digital Volume Control:** Dynamic PCM amplitude scaling with clipping protection built right into the backend.
 - 🔌 **Modular C Firmware:** Developed using ESP-IDF v5.5.4 and FreeRTOS for smooth multitasking and memory optimization.
 
@@ -81,7 +81,7 @@ graph TD
 
 ## 🔌 Hardware Wiring & Pin Mapping
 
-Here is the exact pin configuration used to wire the ZYRA satellite to an **ESP32-S3 DevKitC-1** board:
+Here is the exact pin configuration used to wire the JARVIS satellite to an **ESP32-S3 DevKitC-1** board:
 
 | Module | Pin Name | ESP32-S3 Pin | Description / Function |
 | :--- | :--- | :--- | :--- |
@@ -145,7 +145,7 @@ Here is the exact pin configuration used to wire the ZYRA satellite to an **ESP3
 1. Open your ESP-IDF command prompt (v5.5.4 recommended).
 2. Navigate to the custom firmware directory:
    ```bash
-   cd firmware/zyra-esp32
+   cd firmware/jarvis-esp32
    ```
 3. Set target and compile:
    ```bash
@@ -159,14 +159,14 @@ Here is the exact pin configuration used to wire the ZYRA satellite to an **ESP3
 
 ---
 
-## 🎮 How to Interact with ZYRA
+## 🎮 How to Interact with JARVIS
 
-1. **Power Up:** Connect the ESP32-S3 via USB-C. You will see `Starting ZYRA...` followed by `Connecting WiFi...` on the OLED screen.
-2. **Ready Prompt:** Once connected, ZYRA plays a welcome chime and says *"Hello, I am Zyra."* The screen displays `Ready. Say: 'Hey Zyra' or press BOOT`.
+1. **Power Up:** Connect the ESP32-S3 via USB-C. You will see `Starting JARVIS...` followed by `Connecting WiFi...` on the OLED screen.
+2. **Ready Prompt:** Once connected, JARVIS plays a welcome chime and says *"Hello, I am Jarvis."* The screen displays `Ready. Say: 'Hey Jarvis' or press BOOT`.
 3. **Ask a Question:**
-   - **Hands-Free:** Say *"Hey Zyra"* to trigger listening mode.
+   - **Hands-Free:** Say *"Hey Jarvis"* to trigger listening mode.
    - **Manual:** Press and hold the physical **BOOT button (GPIO 0)** while speaking, then release when finished.
-4. **Watch ZYRA Think & Speak:** ZYRA will show `Thinking...` while analyzing your query, then scroll the answer on screen while speaking out loud through the speaker!
+4. **Watch JARVIS Think & Speak:** JARVIS will show `Thinking...` while analyzing your query, then scroll the answer on screen while speaking out loud through the speaker!
 
 ---
 

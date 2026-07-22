@@ -2,8 +2,8 @@
 
 #include "driver/gpio.h"
 
-#define ZYRA_NAME "JARVIS"
-#define ZYRA_VERSION "1.0.0"
+#define JARVIS_NAME "JARVIS"
+#define JARVIS_VERSION "1.0.0"
 
 #define SAMPLE_RATE 16000
 #define CHANNELS 1

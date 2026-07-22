@@ -1,11 +1,11 @@
-# KIYARI ESP-IDF Firmware
+# JARVIS ESP-IDF Firmware
 
-This is the official C firmware implementation for the **KIYARI** offline voice assistant device based on an ESP32-S3.
+This is the official C firmware implementation for the **JARVIS** offline voice assistant device based on an ESP32-S3.
 
 ## 📂 Project Structure
 
 ```text
-kiyari-esp32/
+jarvis-esp32/
 │
 ├── main/
 │   ├── app_main.c          # Application bootloader and state loop

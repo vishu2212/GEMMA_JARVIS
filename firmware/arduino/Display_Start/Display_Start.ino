@@ -18,10 +18,10 @@ void setup() {
 
   u8g2.setFont(u8g2_font_logisoso18_tf);
 
-  int16_t x = (128 - u8g2.getStrWidth("KIYARI")) / 2;
+  int16_t x = (128 - u8g2.getStrWidth("JARVIS")) / 2;
   int16_t y = 40;
 
-  u8g2.drawStr(x, y, "KIYARI");
+  u8g2.drawStr(x, y, "JARVIS");
 
   u8g2.sendBuffer();
 

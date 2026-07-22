@@ -22,7 +22,7 @@
 #define M_PI 3.14159265358979323846
 #endif
 
-static const char *TAG = "ZYRA";
+static const char *TAG = "JARVIS";
 static oled_display_t display_device;
 static button_t trg_button;
 static microphone_t mic_device;
@@ -148,17 +148,18 @@ static void update_state(app_state_t new_state) {
 
     // For static states, render immediately
     if (g_state == APP_BOOT || g_state == APP_WIFI_CONNECTING || g_state == APP_IDLE || g_state == APP_ERROR) {
-        oled_print_string(&display_device, 0, 1, ZYRA_NAME);
+        oled_print_string(&display_device, 0, 1, JARVIS_NAME);
         switch (g_state) {
             case APP_BOOT:
-                oled_print_string(&display_device, 0, 3, "Starting " ZYRA_NAME "...");
+                oled_print_string(&display_device, 0, 3, "Starting " JARVIS_NAME "...");
+                oled_print_string(&display_device, 0, 4, "Connecting WiFi...");
                 break;
             case APP_WIFI_CONNECTING:
                 oled_print_string(&display_device, 0, 3, "Connecting WiFi...");
                 break;
             case APP_IDLE:
                 oled_print_string(&display_device, 0, 3, "Ready.");
-                oled_print_string(&display_device, 0, 5, "Say: 'Hey " ZYRA_NAME "'");
+                oled_print_string(&display_device, 0, 5, "Say: 'Hey " JARVIS_NAME "'");
                 oled_print_string(&display_device, 0, 6, "or press BOOT");
                 break;
             case APP_ERROR:
@@ -173,7 +174,7 @@ static void update_state(app_state_t new_state) {
 
 static void draw_waveform_animation(oled_display_t* dev, int frame) {
     oled_clear(dev);
-    oled_print_string(dev, 0, 1, ZYRA_NAME);
+    oled_print_string(dev, 0, 1, JARVIS_NAME);
     oled_print_string(dev, 0, 3, "Listening...");
     
     // Siri-style flowing waveform
@@ -191,7 +192,7 @@ static void draw_waveform_animation(oled_display_t* dev, int frame) {
 
 static void draw_thinking_animation(oled_display_t* dev, int frame) {
     oled_clear(dev);
-    oled_print_string(dev, 0, 1, ZYRA_NAME);
+    oled_print_string(dev, 0, 1, JARVIS_NAME);
     oled_print_string(dev, 0, 3, "Thinking...");
     
     int cx = 64;
@@ -245,7 +246,7 @@ static void display_animation_task(void *pvParameters) {
             vTaskDelay(pdMS_TO_TICKS(100));
         } else if (g_state == APP_SPEAKING) {
             oled_clear(&display_device);
-            oled_print_string(&display_device, 0, 1, ZYRA_NAME);
+            oled_print_string(&display_device, 0, 1, JARVIS_NAME);
             
             // Print up to 4 lines of the wrapped response starting from speaking_scroll_index
             int render_page = 3;
@@ -449,7 +450,7 @@ static void play_tone_440hz(speaker_t* spk, int duration_ms) {
 void app_main(void)
 {
     ESP_LOGI(TAG, "================================");
-    ESP_LOGI(TAG, "      ZYRA v%s", ZYRA_VERSION);
+    ESP_LOGI(TAG, "      JARVIS v%s", JARVIS_VERSION);
     ESP_LOGI(TAG, "================================");
     ESP_LOGI(TAG, "System Booting...");
 
@@ -485,7 +486,7 @@ void app_main(void)
 
         if (display_device.initialized) {
             oled_clear(&display_device);
-            oled_print_string(&display_device, 0, 1, ZYRA_NAME);
+            oled_print_string(&display_device, 0, 1, JARVIS_NAME);
             oled_print_string(&display_device, 0, 3, "Connected");
             oled_print_string(&display_device, 0, 4, ip_address);
             oled_refresh(&display_device);
@@ -522,7 +523,7 @@ void app_main(void)
     // 6. Test Speaker Tone Playback (440Hz for 500ms)
     if (display_device.initialized) {
         oled_clear(&display_device);
-        oled_print_string(&display_device, 0, 1, ZYRA_NAME);
+        oled_print_string(&display_device, 0, 1, JARVIS_NAME);
         oled_print_string(&display_device, 0, 3, "Testing Speaker...");
         oled_refresh(&display_device);
     }
@@ -533,7 +534,7 @@ void app_main(void)
         websocket_init();
     }
 
-    ESP_LOGI(TAG, "ZYRA initialization complete. Ready for triggers.");
+    ESP_LOGI(TAG, "JARVIS initialization complete. Ready for triggers.");
 
     while (true)
     {

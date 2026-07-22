@@ -7,9 +7,9 @@ from pathlib import Path
 # Setup logs directory
 LOG_DIR = Path(__file__).resolve().parent.parent / "temp"
 os.makedirs(LOG_DIR, exist_ok=True)
-LOG_FILE = LOG_DIR / "zyra.log"
+LOG_FILE = LOG_DIR / "jarvis.log"
 
-def setup_logger(name: str = "zyra") -> logging.Logger:
+def setup_logger(name: str = "jarvis") -> logging.Logger:
     """Configures and returns a rotating logger that prints to console and file."""
     # Reconfigure stdout/stderr for UTF-8 on Windows
     try:
