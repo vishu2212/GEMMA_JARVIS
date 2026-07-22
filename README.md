@@ -49,18 +49,18 @@ Here is how data flows seamlessly between the **Hardware Satellite** and the **L
 
 ```mermaid
 graph TD
-    subgraph ESP32-S3 Satellite Client "Ears, Eyes & Mouth"
-        A[🎤 INMP441 I2S Mic / BOOT Button] -->|16kHz PCM16 Audio Stream| B[Persistent WebSocket Client]
-        B -->|Audio Playback Stream| C[🔊 MAX98357A DAC & Speaker]
-        B -->|OLED State Events & Text| D[📺 SH1106 / SSD1306 OLED Display]
+    subgraph Client ["ESP32-S3 Satellite Client (Ears, Eyes & Mouth)"]
+        A["🎤 INMP441 I2S Mic / BOOT Button"] -->|16kHz PCM16 Audio Stream| B["Persistent WebSocket Client"]
+        B -->|Audio Playback Stream| C["🔊 MAX98357A DAC & Speaker"]
+        B -->|OLED State Events & Text| D["📺 SH1106 / SSD1306 OLED Display"]
     end
 
-    subgraph Local PC Brain "The AI Engine"
-        B <===>|Full-Duplex WebSockets| E[FastAPI Server Controller]
-        E -->|WAV Audio Chunk| F[⚡ Faster-Whisper STT]
-        F -->|Transcribed Text| G[🧠 Qwen 2.5 Instruct LLM]
-        G -->|Assistant Response| H[🎙️ Piper Neural TTS]
-        H -->|PCM Audio Payload| I[🔊 Sound Resampler & DSP]
+    subgraph Brain ["Local PC Brain (The AI Engine)"]
+        B <-->|Full-Duplex WebSockets| E["FastAPI Server Controller"]
+        E -->|WAV Audio Chunk| F["⚡ Faster-Whisper STT"]
+        F -->|Transcribed Text| G["🧠 Qwen 2.5 Instruct LLM"]
+        G -->|Assistant Response| H["🎙️ Piper Neural TTS"]
+        H -->|PCM Audio Payload| I["🔊 Sound Resampler & DSP"]
         I -->|Synthesized PCM Stream| E
     end
 ```
