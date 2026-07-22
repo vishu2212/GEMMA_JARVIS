@@ -1,12 +1,12 @@
 esphome:
-  name: zyra
-  friendly_name: ZYRA
+  name: jarvis
+  friendly_name: JARVIS
   on_boot:
     priority: -100
     then:
       - delay: 2s
       - media_player.play_media:
-          id: zyra_player
+          id: jarvis_player
           media_url: "http://10.103.253.164:8000/hello.wav"
 
 esp32:
@@ -46,7 +46,7 @@ button:
     on_press:
       then:
         - media_player.play_media:
-            id: zyra_player
+            id: jarvis_player
             media_url: "http://10.103.253.164:8000/hello.wav"
   - platform: template
     name: "Play Beep"
@@ -54,7 +54,7 @@ button:
     on_press:
       then:
         - media_player.play_media:
-            id: zyra_player
+            id: jarvis_player
             media_url: "http://10.103.253.164:8000/beep.wav"
 
 i2s_audio:
@@ -64,7 +64,7 @@ i2s_audio:
 
 speaker:
   - platform: i2s_audio
-    id: zyra_speaker
+    id: jarvis_speaker
     i2s_audio_id: i2s_out
     i2s_dout_pin: GPIO7
     dac_type: external
@@ -72,8 +72,8 @@ speaker:
 
 media_player:
   - platform: speaker
-    id: zyra_player
-    name: "ZYRA Speaker"
+    id: jarvis_player
+    name: "JARVIS Speaker"
     announcement_pipeline:
-      speaker: zyra_speaker
+      speaker: jarvis_speaker
     buffer_size: 100000

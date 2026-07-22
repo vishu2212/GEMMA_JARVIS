@@ -7,7 +7,7 @@ from pathlib import Path
 def main():
     piper_exe = r"C:\piper\piper.exe"
     voice_model = r"C:\piper\voices\en_US-lessac-medium.onnx"
-    text = "Hello, I am Zyra."
+    text = "Hello, I am Jarvis."
     
     # Target file
     script_dir = Path(__file__).resolve().parent

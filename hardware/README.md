@@ -1,6 +1,6 @@
-# ZYRA Hardware Configuration & Interface Guide
+# JARVIS Hardware Configuration & Interface Guide
 
-This document describes the hardware specifications, component descriptions, and pin connections for the **ZYRA Smart Voice Companion**.
+This document describes the hardware specifications, component descriptions, and pin connections for the **JARVIS Smart Voice Companion**.
 
 ---
 
