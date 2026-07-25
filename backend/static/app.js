@@ -36,10 +36,14 @@ document.addEventListener('DOMContentLoaded', () => {
   let audioChunks = [];
   let isRecordingMic = false;
 
-  // Auto-Start WebCam on page load
+  // Auto-Start WebCam on page load safely
   startWebcam();
 
   async function startWebcam() {
+    if (!navigator.mediaDevices || !navigator.mediaDevices.getUserMedia) {
+      console.warn("navigator.mediaDevices is unavailable in this browser context.");
+      return;
+    }
     try {
       mediaStream = await navigator.mediaDevices.getUserMedia({
         video: { facingMode: 'environment', width: { ideal: 1280 }, height: { ideal: 720 } },

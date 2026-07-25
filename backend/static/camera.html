@@ -7,61 +7,140 @@
   <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@400;600;700;800&display=swap" rel="stylesheet">
   <style>
     * { box-sizing: border-box; margin: 0; padding: 0; font-family: 'Outfit', sans-serif; }
-    body { background: #090d16; color: #f8fafc; text-align: center; padding: 1rem; display: flex; flex-direction: column; height: 100vh; justify-content: space-between; }
-    .header { padding: 1rem 0; }
+    body { background: #090d16; color: #f8fafc; text-align: center; padding: 1.2rem; display: flex; flex-direction: column; height: 100vh; justify-content: space-between; }
+    .header { padding: 0.5rem 0; }
     .header h1 { font-size: 1.4rem; color: #06b6d4; font-weight: 800; }
     .header p { font-size: 0.85rem; color: #94a3b8; }
-    .video-wrap { position: relative; width: 100%; flex: 1; background: #020617; border-radius: 16px; overflow: hidden; border: 1px solid rgba(255,255,255,0.1); margin: 1rem 0; display: flex; align-items: center; justify-content: center; }
+    .video-wrap { position: relative; width: 100%; flex: 1; background: #020617; border-radius: 16px; overflow: hidden; border: 1px solid rgba(255,255,255,0.1); margin: 0.8rem 0; display: flex; flex-direction: column; align-items: center; justify-content: center; padding: 1rem; }
     video { width: 100%; height: 100%; object-fit: cover; }
     canvas { display: none; }
-    .btn { background: linear-gradient(135deg, #06b6d4, #3b82f6); color: white; border: none; padding: 1rem 2rem; border-radius: 30px; font-size: 1.1rem; font-weight: 700; cursor: pointer; width: 100%; box-shadow: 0 4px 20px rgba(6,182,212,0.4); }
+    .preview-img { max-width: 100%; max-height: 100%; border-radius: 12px; object-fit: contain; }
+    .btn-group { display: flex; flex-direction: column; gap: 0.75rem; width: 100%; }
+    .btn { background: linear-gradient(135deg, #06b6d4, #3b82f6); color: white; border: none; padding: 0.9rem 1.5rem; border-radius: 30px; font-size: 1rem; font-weight: 700; cursor: pointer; width: 100%; box-shadow: 0 4px 20px rgba(6,182,212,0.4); display: flex; align-items: center; justify-content: center; gap: 0.5rem; }
+    .btn-accent { background: linear-gradient(135deg, #8b5cf6, #c084fc); box-shadow: 0 4px 20px rgba(139,92,246,0.4); }
     .btn-danger { background: #ef4444; }
     .status-badge { display: inline-flex; align-items: center; gap: 0.5rem; background: rgba(16, 185, 129, 0.15); color: #10b981; border: 1px solid rgba(16, 185, 129, 0.3); padding: 0.4rem 1rem; border-radius: 20px; font-size: 0.85rem; font-weight: 600; }
     .dot { width: 8px; height: 8px; border-radius: 50%; background: #10b981; box-shadow: 0 0 8px #10b981; }
+    .diagnosis-output { background: rgba(255,255,255,0.05); padding: 0.75rem; border-radius: 10px; font-size: 0.88rem; text-align: left; max-height: 120px; overflow-y: auto; color: #e2e8f0; border: 1px solid rgba(255,255,255,0.1); }
   </style>
 </head>
 <body>
   <div class="header">
     <h1>📱 JARVIS MOBILE VISION</h1>
-    <p>Live HD Camera Stream for Circuit Inspection</p>
+    <p>Gemma 4 Circuit Inspector & Camera Feed</p>
   </div>
 
   <div class="video-wrap">
-    <video id="mobile-video" autoplay playsinline muted></video>
+    <video id="mobile-video" autoplay playsinline muted style="display:none;"></video>
+    <img id="preview-img" class="preview-img" style="display:none;" />
+    <div id="placeholder-view">
+      <span style="font-size: 3rem; opacity: 0.5;">📷</span>
+      <p style="margin-top:0.5rem; font-size:0.9rem; color:#94a3b8;">Tap below to Stream Live or Snap a Circuit Photo</p>
+    </div>
     <canvas id="mobile-canvas"></canvas>
   </div>
 
+  <div id="diagnosis-container" style="display:none; margin-bottom: 0.5rem;">
+    <div class="diagnosis-output" id="diagnosis-output">Analyzing...</div>
+  </div>
+
   <div class="footer">
-    <div id="status-box" style="margin-bottom: 1rem;">
-      <span class="status-badge"><span class="dot"></span> <span id="status-text">Ready to Connect</span></span>
+    <div id="status-box" style="margin-bottom: 0.75rem;">
+      <span class="status-badge"><span class="dot"></span> <span id="status-text">Ready to Scan</span></span>
     </div>
-    <button id="btn-start-stream" class="btn">📱 Start Live Camera Stream</button>
+
+    <!-- Hidden Native Camera File Input (Works on ALL mobile browsers without HTTPS) -->
+    <input type="file" id="mobile-file-input" accept="image/*" capture="environment" style="display:none;">
+
+    <div class="btn-group">
+      <button id="btn-snap-photo" class="btn btn-accent">📸 Snap & Analyze Circuit Photo</button>
+      <button id="btn-start-stream" class="btn">📹 Start Live Video Stream</button>
+    </div>
   </div>
 
   <script>
     const video = document.getElementById('mobile-video');
     const canvas = document.getElementById('mobile-canvas');
-    const btn = document.getElementById('btn-start-stream');
+    const previewImg = document.getElementById('preview-img');
+    const placeholderView = document.getElementById('placeholder-view');
+    const btnStream = document.getElementById('btn-start-stream');
+    const btnSnap = document.getElementById('btn-snap-photo');
+    const fileInput = document.getElementById('mobile-file-input');
     const statusText = document.getElementById('status-text');
+    const diagContainer = document.getElementById('diagnosis-container');
+    const diagOutput = document.getElementById('diagnosis-output');
+    
     let stream = null;
     let streamInterval = null;
 
-    btn.addEventListener('click', async () => {
+    // 1. Native Snap Photo Mode (100% works on iOS & Android via native camera prompt)
+    btnSnap.addEventListener('click', () => {
+      fileInput.click();
+    });
+
+    fileInput.addEventListener('change', async (e) => {
+      if (!e.target.files || !e.target.files[0]) return;
+      const file = e.target.files[0];
+
+      // Show preview
+      previewImg.src = URL.createObjectURL(file);
+      previewImg.style.display = 'block';
+      video.style.display = 'none';
+      placeholderView.style.display = 'none';
+
+      statusText.textContent = 'Analyzing Circuit with Gemma 4...';
+      diagContainer.style.display = 'block';
+      diagOutput.textContent = '🔍 Gemma 4 Vision inspecting hardware...';
+
+      const formData = new FormData();
+      formData.append('file', file);
+      formData.append('prompt', 'Analyze this breadboard circuit image. Identify components and check for missing connections or wiring errors.');
+
+      try {
+        const res = await fetch('/vision/analyze', { method: 'POST', body: formData });
+        const data = await res.json();
+        if (data.status === 'success') {
+          statusText.textContent = 'Analysis Complete!';
+          diagOutput.textContent = data.analysis;
+          if (data.audio_url) {
+            const audio = new Audio(data.audio_url);
+            audio.play();
+          }
+        } else {
+          statusText.textContent = 'Analysis Failed';
+          diagOutput.textContent = 'Failed to analyze image.';
+        }
+      } catch (err) {
+        statusText.textContent = 'Error Analyzing Image';
+        diagOutput.textContent = 'Error: ' + err.message;
+      }
+    });
+
+    // 2. WebCam Stream Mode (Checks mediaDevices support gracefully)
+    btnStream.addEventListener('click', async () => {
       if (!stream) {
+        if (!navigator.mediaDevices || !navigator.mediaDevices.getUserMedia) {
+          alert('Live WebCam streaming requires HTTPS on mobile devices. Use "Snap & Analyze Circuit Photo" button above to use your phone camera instantly!');
+          return;
+        }
+
         try {
           stream = await navigator.mediaDevices.getUserMedia({
-            video: { facingMode: { ideal: 'environment' }, width: { ideal: 1920 }, height: { ideal: 1080 } },
+            video: { facingMode: { ideal: 'environment' }, width: { ideal: 1280 }, height: { ideal: 720 } },
             audio: false
           });
           video.srcObject = stream;
-          statusText.textContent = 'Streaming HD Video to JARVIS Desktop';
-          btn.textContent = '🛑 Stop Stream';
-          btn.classList.add('btn-danger');
+          video.style.display = 'block';
+          previewImg.style.display = 'none';
+          placeholderView.style.display = 'none';
 
-          // Send frame every 2 seconds to server endpoint /vision/stream/frame
-          streamInterval = setInterval(sendFrame, 2000);
+          statusText.textContent = 'Streaming Video to JARVIS';
+          btnStream.textContent = '🛑 Stop Video Stream';
+          btnStream.classList.add('btn-danger');
+
+          streamInterval = setInterval(sendFrame, 3000);
         } catch (e) {
-          alert('Camera error: ' + e.message);
+          alert('Camera stream error: ' + e.message + '\nUse "Snap & Analyze Circuit Photo" instead.');
         }
       } else {
         stopStream();
@@ -73,23 +152,25 @@
       if (stream) stream.getTracks().forEach(t => t.stop());
       video.srcObject = null;
       stream = null;
-      statusText.textContent = 'Stream Disconnected';
-      btn.textContent = '📱 Start Live Camera Stream';
-      btn.classList.remove('btn-danger');
+      statusText.textContent = 'Stream Stopped';
+      btnStream.textContent = '📹 Start Live Video Stream';
+      btnStream.classList.remove('btn-danger');
+      video.style.display = 'none';
+      placeholderView.style.display = 'flex';
     }
 
     async function sendFrame() {
       if (!stream) return;
       const ctx = canvas.getContext('2d');
-      canvas.width = video.videoWidth || 1280;
-      canvas.height = video.videoHeight || 720;
+      canvas.width = video.videoWidth || 640;
+      canvas.height = video.videoHeight || 480;
       ctx.drawImage(video, 0, 0, canvas.width, canvas.height);
 
       canvas.toBlob(async (blob) => {
         const formData = new FormData();
         formData.append('file', blob, 'mobile_frame.jpg');
         try {
-          await fetch('/vision/stream/frame', { method: 'POST', body: formData });
+          await fetch('/vision/analyze', { method: 'POST', body: formData });
         } catch (err) {
           console.error('Frame upload error:', err);
         }
