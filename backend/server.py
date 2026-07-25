@@ -72,5 +72,12 @@ async def serve_index():
         return FileResponse(index_file)
     return {"message": "JARVIS Edge AI Backend API Running"}
 
+@app.get("/camera", response_class=FileResponse)
+async def serve_camera():
+    camera_file = settings.BASE_DIR / "static" / "camera.html"
+    if camera_file.exists():
+        return FileResponse(camera_file)
+    return {"message": "Mobile Camera Page Not Found"}
+
 if __name__ == "__main__":
     uvicorn.run("server:app", host=settings.HOST, port=settings.PORT, reload=False)

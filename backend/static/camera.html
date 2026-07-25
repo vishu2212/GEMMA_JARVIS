@@ -1,0 +1,100 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+  <title>JARVIS Mobile Camera Streamer</title>
+  <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@400;600;700;800&display=swap" rel="stylesheet">
+  <style>
+    * { box-sizing: border-box; margin: 0; padding: 0; font-family: 'Outfit', sans-serif; }
+    body { background: #090d16; color: #f8fafc; text-align: center; padding: 1rem; display: flex; flex-direction: column; height: 100vh; justify-content: space-between; }
+    .header { padding: 1rem 0; }
+    .header h1 { font-size: 1.4rem; color: #06b6d4; font-weight: 800; }
+    .header p { font-size: 0.85rem; color: #94a3b8; }
+    .video-wrap { position: relative; width: 100%; flex: 1; background: #020617; border-radius: 16px; overflow: hidden; border: 1px solid rgba(255,255,255,0.1); margin: 1rem 0; display: flex; align-items: center; justify-content: center; }
+    video { width: 100%; height: 100%; object-fit: cover; }
+    canvas { display: none; }
+    .btn { background: linear-gradient(135deg, #06b6d4, #3b82f6); color: white; border: none; padding: 1rem 2rem; border-radius: 30px; font-size: 1.1rem; font-weight: 700; cursor: pointer; width: 100%; box-shadow: 0 4px 20px rgba(6,182,212,0.4); }
+    .btn-danger { background: #ef4444; }
+    .status-badge { display: inline-flex; align-items: center; gap: 0.5rem; background: rgba(16, 185, 129, 0.15); color: #10b981; border: 1px solid rgba(16, 185, 129, 0.3); padding: 0.4rem 1rem; border-radius: 20px; font-size: 0.85rem; font-weight: 600; }
+    .dot { width: 8px; height: 8px; border-radius: 50%; background: #10b981; box-shadow: 0 0 8px #10b981; }
+  </style>
+</head>
+<body>
+  <div class="header">
+    <h1>📱 JARVIS MOBILE VISION</h1>
+    <p>Live HD Camera Stream for Circuit Inspection</p>
+  </div>
+
+  <div class="video-wrap">
+    <video id="mobile-video" autoplay playsinline muted></video>
+    <canvas id="mobile-canvas"></canvas>
+  </div>
+
+  <div class="footer">
+    <div id="status-box" style="margin-bottom: 1rem;">
+      <span class="status-badge"><span class="dot"></span> <span id="status-text">Ready to Connect</span></span>
+    </div>
+    <button id="btn-start-stream" class="btn">📱 Start Live Camera Stream</button>
+  </div>
+
+  <script>
+    const video = document.getElementById('mobile-video');
+    const canvas = document.getElementById('mobile-canvas');
+    const btn = document.getElementById('btn-start-stream');
+    const statusText = document.getElementById('status-text');
+    let stream = null;
+    let streamInterval = null;
+
+    btn.addEventListener('click', async () => {
+      if (!stream) {
+        try {
+          stream = await navigator.mediaDevices.getUserMedia({
+            video: { facingMode: { ideal: 'environment' }, width: { ideal: 1920 }, height: { ideal: 1080 } },
+            audio: false
+          });
+          video.srcObject = stream;
+          statusText.textContent = 'Streaming HD Video to JARVIS Desktop';
+          btn.textContent = '🛑 Stop Stream';
+          btn.classList.add('btn-danger');
+
+          // Send frame every 2 seconds to server endpoint /vision/stream/frame
+          streamInterval = setInterval(sendFrame, 2000);
+        } catch (e) {
+          alert('Camera error: ' + e.message);
+        }
+      } else {
+        stopStream();
+      }
+    });
+
+    function stopStream() {
+      if (streamInterval) clearInterval(streamInterval);
+      if (stream) stream.getTracks().forEach(t => t.stop());
+      video.srcObject = null;
+      stream = null;
+      statusText.textContent = 'Stream Disconnected';
+      btn.textContent = '📱 Start Live Camera Stream';
+      btn.classList.remove('btn-danger');
+    }
+
+    async function sendFrame() {
+      if (!stream) return;
+      const ctx = canvas.getContext('2d');
+      canvas.width = video.videoWidth || 1280;
+      canvas.height = video.videoHeight || 720;
+      ctx.drawImage(video, 0, 0, canvas.width, canvas.height);
+
+      canvas.toBlob(async (blob) => {
+        const formData = new FormData();
+        formData.append('file', blob, 'mobile_frame.jpg');
+        try {
+          await fetch('/vision/stream/frame', { method: 'POST', body: formData });
+        } catch (err) {
+          console.error('Frame upload error:', err);
+        }
+      }, 'image/jpeg', 0.85);
+    }
+  </script>
+</body>
+</html>
