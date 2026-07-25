@@ -56,17 +56,28 @@ volume_multiplier = 0.8
 active_esp32_ws: Optional[WebSocket] = None
 
 
-async def stream_wav_to_esp32(wav_path: str):
+async def stream_wav_to_esp32(wav_path: str, text_response: str = "Hardware Diagnosis"):
     """Streams a WAV audio file directly to the connected ESP32 hardware speaker over WebSocket."""
     global active_esp32_ws
     if active_esp32_ws is not None:
         try:
+            # 1. Send speaking JSON event to activate ESP32 speaker driver and OLED text display
+            await active_esp32_ws.send_json({
+                "event": "speaking",
+                "status": "Speaking to ESP32 Speaker...",
+                "response": text_response
+            })
+            
+            # 2. Stream binary PCM audio chunks
             pcm_bytes = get_resampled_pcm16_bytes(wav_path, target_sr=16000, volume_multiplier=volume_multiplier)
             chunk_size = 2048
             for i in range(0, len(pcm_bytes), chunk_size):
                 chunk = pcm_bytes[i:i+chunk_size]
                 await active_esp32_ws.send_bytes(chunk)
                 await asyncio.sleep(0.05)
+                
+            # 3. Send done JSON event to cleanly stop speaker driver when finished
+            await active_esp32_ws.send_json({"event": "done"})
             logger.info("Successfully streamed synthesized speech audio to ESP32 speaker over WebSocket.")
         except Exception as e:
             logger.error(f"Error streaming audio to ESP32: {e}")
@@ -379,7 +390,7 @@ async def post_vision_analyze(
         audio_url = f"/temp/audio/{audio_filename}"
         
         # Stream audio directly to ESP32 hardware speaker
-        await stream_wav_to_esp32(output_wav_path)
+        await stream_wav_to_esp32(output_wav_path, text_response=analysis_text)
         
         total_ms = int((time.perf_counter() - start_time) * 1000)
         
