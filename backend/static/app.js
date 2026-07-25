@@ -169,12 +169,18 @@ document.addEventListener('DOMContentLoaded', () => {
 
   /* ── QR Modal ─────────────────────────────────────────────── */
   function openQrModal() {
-    const hostIp = (window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1')
-      ? '192.168.1.111' : window.location.hostname;
-    const fullUrl = `http://${hostIp}:${window.location.port || '8001'}/mobile`;
-    if (mobileUrl) mobileUrl.textContent = fullUrl;
+    const isLocal = (window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1');
+    const fullUrl = isLocal 
+      ? 'http://192.168.1.111:8001/mobile' 
+      : `${window.location.origin}/mobile`;
+      
+    if (mobileUrl) {
+      mobileUrl.innerHTML = `<a href="${fullUrl}" target="_blank" style="color:var(--cyan);text-decoration:none;">${fullUrl}</a>`;
+    }
     const qrImg = document.getElementById('qr-code-img');
-    if (qrImg) qrImg.src = `https://api.qrserver.com/v1/create-qr-code/?size=200x200&data=${encodeURIComponent(fullUrl)}`;
+    if (qrImg) {
+      qrImg.src = `https://api.qrserver.com/v1/create-qr-code/?size=220x220&data=${encodeURIComponent(fullUrl)}`;
+    }
     if (qrModal) qrModal.classList.add('open');
   }
 
