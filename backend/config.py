@@ -103,6 +103,14 @@ class Settings(BaseModel):
 # Instantiate global settings
 settings = Settings()
 
-# Ensure directories exist
-os.makedirs(settings.TEMP_AUDIO_DIR, exist_ok=True)
-os.makedirs(settings.KNOWLEDGE_DOCS_DIR, exist_ok=True)
+# Ensure directories exist safely
+try:
+    os.makedirs(settings.TEMP_DIR, exist_ok=True)
+    os.makedirs(settings.TEMP_AUDIO_DIR, exist_ok=True)
+except Exception:
+    pass
+
+try:
+    os.makedirs(settings.KNOWLEDGE_DOCS_DIR, exist_ok=True)
+except Exception:
+    pass
