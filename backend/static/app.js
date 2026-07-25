@@ -212,7 +212,7 @@ document.addEventListener('DOMContentLoaded', () => {
 
       const data = await res.json();
       setPipelineStage('pipe-tts');
-      addChatMessage('JARVIS', data.response, 'bot-msg', data.citations);
+      addChatMessage('JARVIS', data.response, 'bot-msg', data.citations, data.tool_call);
 
       if (data.latency) {
         latLlm.textContent = (data.latency.llm_ms / 1000).toFixed(2) + 's';
@@ -334,20 +334,46 @@ document.addEventListener('DOMContentLoaded', () => {
     });
   }
 
+  // 8. Quick Tool Button Triggers
+  document.querySelectorAll('.btn-tool-trigger').forEach(btn => {
+    btn.addEventListener('click', async () => {
+      const toolName = btn.getAttribute('data-tool');
+      if (!toolName) return;
+      try {
+        const res = await fetch('/tools/execute', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ tool_name: toolName })
+        });
+        const data = await res.json();
+        if (data.status === 'success') {
+          const summary = JSON.stringify(data.result);
+          addChatMessage('SYSTEM', `Executed tool <code>${toolName}()</code>: ${summary}`, 'system-msg', null, { name: toolName, result: data.result });
+        }
+      } catch (err) {
+        console.error('Tool execution error:', err);
+      }
+    });
+  });
+
   // Volume Slider
   volSlider.addEventListener('input', (e) => {
     volVal.textContent = e.target.value + '%';
   });
 
   // Helper Utilities
-  function addChatMessage(sender, text, msgClass, citations = null) {
+  function addChatMessage(sender, text, msgClass, citations = null, toolCall = null) {
     const msgDiv = document.createElement('div');
     msgDiv.className = `msg ${msgClass}`;
     let citeHtml = '';
     if (citations && citations.length > 0) {
       citeHtml = citations.map(c => `<br/><span class="citation-tag">📄 Source: ${c.doc_id} (${c.title})</span>`).join(' ');
     }
-    msgDiv.innerHTML = `<div class="msg-sender">${sender}</div><div class="msg-content">${text} ${citeHtml}</div>`;
+    let toolHtml = '';
+    if (toolCall && toolCall.name) {
+      toolHtml = `<br/><span class="tool-call-badge">🛠️ Executed Tool: ${toolCall.name}()</span>`;
+    }
+    msgDiv.innerHTML = `<div class="msg-sender">${sender}</div><div class="msg-content">${text} ${toolHtml} ${citeHtml}</div>`;
     chatMessages.appendChild(msgDiv);
     chatMessages.scrollTop = chatMessages.scrollHeight;
   }

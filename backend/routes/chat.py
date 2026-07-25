@@ -22,11 +22,13 @@ from services.audio_service import AudioService
 from services.conversation_service import ConversationService
 from services.vision_service import VisionService
 from services.rag_service import RAGService
+from services.function_calling_service import FunctionCallingService
 
 router = APIRouter(tags=["Chat & Audio Services"])
 
 # Initialize services (lazy-wrapped or fallback handled)
 rag_service = RAGService()
+function_calling_service = FunctionCallingService()
 whisper_service: Optional[WhisperService] = None
 try:
     whisper_service = WhisperService()
@@ -289,20 +291,27 @@ class ChatTextRequest(BaseModel):
 class ChatTextResponse(BaseModel):
     response: str
     citations: Optional[List[dict]] = None
+    tool_call: Optional[dict] = None
     latency: Optional[dict] = None
 
 
 @router.post("/chat/text", response_model=ChatTextResponse)
 async def post_chat_text(request: ChatTextRequest):
-    """Processes text chat input -> queries RAG datasheets -> queries LM Studio -> returns text response with citations."""
+    """Processes text chat input -> checks tool calls -> queries RAG -> queries Gemma -> returns response."""
     start_total = time.perf_counter()
     try:
+        # Check Function Calling tool execution
+        tool_name, tool_result, prompt_aug = function_calling_service.detect_and_execute(request.text)
+        tool_call_meta = {"name": tool_name, "result": tool_result} if tool_name else None
+
+        user_prompt = prompt_aug if tool_name else request.text
+
         # Search RAG datasheets for authoritative context
-        rag_context, citations = rag_service.search_datasheets(request.text)
+        rag_context, citations = rag_service.search_datasheets(user_prompt)
 
         conversation_service.add_message(request.session_id, "user", request.text)
         history = conversation_service.get_history(request.session_id)
-        system_prompt = conversation_service.get_system_prompt(request.text)
+        system_prompt = conversation_service.get_system_prompt(user_prompt)
 
         if rag_context:
             system_prompt += f"\n\n{rag_context}"
@@ -324,7 +333,7 @@ async def post_chat_text(request: ChatTextRequest):
         }
         logger.info(f"Text Latency Profile:\n{json.dumps(latency, indent=2)}")
         
-        return ChatTextResponse(response=reply, citations=citations, latency=latency)
+        return ChatTextResponse(response=reply, citations=citations, tool_call=tool_call_meta, latency=latency)
     except Exception as e:
         logger.error(f"Error in /chat/text: {e}", exc_info=True)
         raise HTTPException(status_code=500, detail=str(e))
@@ -835,4 +844,24 @@ async def post_docs_upload(file: UploadFile = File(...)):
         "message": f"Successfully indexed datasheet '{file.filename}' into RAG memory.",
         "documents": rag_service.get_document_list()
     }
+
+
+class ToolExecuteRequest(BaseModel):
+    tool_name: str
+
+@router.post("/tools/execute")
+async def post_tools_execute(request: ToolExecuteRequest):
+    """Executes a specific Gemma 4 hardware tool directly from dashboard buttons."""
+    func_map = {
+        "scan_wifi": function_calling_service.scan_wifi,
+        "get_system_info": function_calling_service.get_system_info,
+        "get_network_info": function_calling_service.get_network_info,
+        "restart_microphone": function_calling_service.restart_microphone,
+        "read_sd_card": function_calling_service.read_sd_card
+    }
+    if request.tool_name not in func_map:
+        raise HTTPException(status_code=400, detail=f"Tool '{request.tool_name}' not found.")
+    
+    result = func_map[request.tool_name]()
+    return {"status": "success", "tool_name": request.tool_name, "result": result}
 
