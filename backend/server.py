@@ -3,20 +3,19 @@ from contextlib import asynccontextmanager
 import uvicorn
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
+from fastapi.staticfiles import StaticFiles
+from fastapi.responses import FileResponse
 
 from config import settings
 from routes import health, chat
 from utils.logger import logger
 from utils.audio_utils import cleanup_expired_audio_files
 
-from fastapi.staticfiles import StaticFiles
-
 async def periodic_audio_cleanup():
     """Runs a background loop to prune old audio files from cache every 5 minutes."""
     logger.info("Background temp audio cleanup loop started.")
     while True:
         try:
-            # Check for files to cleanup every 5 minutes (300 seconds)
             await asyncio.sleep(300)
             cleanup_expired_audio_files(str(settings.TEMP_AUDIO_DIR), max_age_seconds=300)
         except asyncio.CancelledError:
@@ -27,39 +26,34 @@ async def periodic_audio_cleanup():
 
 @asynccontextmanager
 async def lifespan(app: FastAPI):
-    # Startup actions
     logger.info("Initializing JARVIS Backend Application Lifespan...")
     logger.info(f"Target Settings: HOST={settings.HOST}, PORT={settings.PORT}")
-    logger.info(f"LM Studio URL: {settings.LM_STUDIO_URL}")
     
-    # Run an initial clean to sweep any legacy temp files left from a previous crash
     cleanup_expired_audio_files(str(settings.TEMP_AUDIO_DIR), max_age_seconds=0)
-    
-    # Start background loop task
     cleanup_task = asyncio.create_task(periodic_audio_cleanup())
     
     yield
     
-    # Shutdown actions
     logger.info("Shutting down JARVIS Backend Application Lifespan...")
     cleanup_task.cancel()
-    # Wait until cleanup task exits cleanly
     try:
         await cleanup_task
     except asyncio.CancelledError:
         pass
 
-# Initialize FastAPI with lifespan context
 app = FastAPI(
-    title="JARVIS Voice Assistant Backend",
-    description="Offline voice assistant service pipeline for ESP32-S3 (JARVIS)",
+    title="JARVIS Edge AI Copilot Backend",
+    description="Embedded Systems AI Copilot service pipeline for ESP32-S3 (JARVIS)",
     version="1.0.0",
     lifespan=lifespan
 )
 
 app.mount("/temp", StaticFiles(directory=str(settings.TEMP_DIR)), name="temp")
 
-# CORS configurations for developer dashboards/testing
+static_dir = settings.BASE_DIR / "static"
+if static_dir.exists():
+    app.mount("/static", StaticFiles(directory=str(static_dir)), name="static")
+
 app.add_middleware(
     CORSMiddleware,
     allow_origins=["*"],
@@ -68,10 +62,15 @@ app.add_middleware(
     allow_headers=["*"],
 )
 
-# Include endpoint routes
 app.include_router(health.router)
 app.include_router(chat.router)
 
+@app.get("/", response_class=FileResponse)
+async def serve_index():
+    index_file = settings.BASE_DIR / "static" / "index.html"
+    if index_file.exists():
+        return FileResponse(index_file)
+    return {"message": "JARVIS Edge AI Backend API Running"}
+
 if __name__ == "__main__":
-    # Start uvicorn server programmatically if file executed directly
     uvicorn.run("server:app", host=settings.HOST, port=settings.PORT, reload=False)

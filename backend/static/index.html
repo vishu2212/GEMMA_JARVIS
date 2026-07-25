@@ -1,0 +1,125 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+  <title>JARVIS Edge AI — Embedded Copilot & Dashboard</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;500;600;700;800&family=JetBrains+Mono:wght@400;500;600&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="/static/styles.css">
+  <link rel="manifest" href="/static/manifest.json">
+  <meta name="theme-color" content="#0f172a">
+</head>
+<body>
+  <div class="app-container">
+    <!-- Header Navbar -->
+    <header class="navbar">
+      <div class="brand">
+        <div class="logo-icon">🤖</div>
+        <div class="brand-text">
+          <h1>JARVIS <span>EDGE AI</span></h1>
+          <p class="subtitle">Embedded AI Engineering Copilot • Gemma 4</p>
+        </div>
+      </div>
+      <div class="status-pills">
+        <div class="pill" id="pill-esp32"><span class="dot green"></span> ESP32: <strong id="status-esp32">Connecting...</strong></div>
+        <div class="pill"><span class="dot green"></span> Gemma 4: <strong>gemma-4-31b-it</strong></div>
+        <div class="pill"><span class="dot green"></span> Whisper: <strong>Small (CUDA)</strong></div>
+        <div class="pill"><span class="dot green"></span> Piper: <strong>Lessac Neural</strong></div>
+      </div>
+    </header>
+
+    <!-- Main Grid Layout -->
+    <main class="dashboard-grid">
+      
+      <!-- Left Column: Live Vision & Hardware Inspector -->
+      <section class="card vision-card">
+        <div class="card-header">
+          <h2>📷 Live Hardware Vision Inspector</h2>
+          <span class="badge badge-purple">Gemma 4 Vision</span>
+        </div>
+
+        <div class="video-container">
+          <video id="camera-feed" autoplay playsinline muted></video>
+          <canvas id="frame-canvas" style="display:none;"></canvas>
+          <div class="video-overlay" id="video-overlay">
+            <span class="pulse-icon">📷</span>
+            <p>Camera Stopped</p>
+          </div>
+          <div class="scan-line" id="scan-line" style="display:none;"></div>
+        </div>
+
+        <div class="camera-controls">
+          <button id="btn-toggle-camera" class="btn btn-primary">📹 Start Phone / Web Camera</button>
+          <button id="btn-inspect-now" class="btn btn-accent" disabled>🔍 Analyze Circuit Now</button>
+          <button id="btn-auto-stream" class="btn btn-outline" disabled>🔄 Auto-Inspect (3s)</button>
+        </div>
+
+        <!-- Latest Diagnosis Panel -->
+        <div class="diagnosis-panel">
+          <div class="panel-title">
+            <span>🔍 Recent Hardware Diagnosis</span>
+            <span class="confidence-tag" id="confidence-tag">Confidence: 96%</span>
+          </div>
+          <div class="diagnosis-box" id="diagnosis-box">
+            <p class="placeholder-text">Point camera at breadboard setup and click "Analyze Circuit Now" or enable Auto-Inspect.</p>
+          </div>
+          <div class="detected-components" id="detected-components">
+            <span class="chip-badge">ESP32-S3</span>
+            <span class="chip-badge">INMP441 Mic</span>
+            <span class="chip-badge">MAX98357A DAC</span>
+            <span class="chip-badge">SSD1306 OLED</span>
+          </div>
+        </div>
+      </section>
+
+      <!-- Right Column: Interactive Voice & Assistant Console -->
+      <section class="card chat-card">
+        <div class="card-header">
+          <h2>💬 Voice & Assistant Console</h2>
+          <div class="volume-control">
+            <span>🔊 Volume:</span>
+            <input type="range" id="vol-slider" min="10" max="120" value="80">
+            <span id="vol-val">80%</span>
+          </div>
+        </div>
+
+        <!-- Live Pipeline Stages Indicator -->
+        <div class="pipeline-tracker" id="pipeline-tracker">
+          <div class="stage-step active" id="stage-idle"><span>🟢</span> Ready</div>
+          <div class="stage-step" id="stage-listening"><span>🎤</span> Listening</div>
+          <div class="stage-step" id="stage-transcribing"><span>📝</span> Transcribing</div>
+          <div class="stage-step" id="stage-reasoning"><span>🧠</span> Reasoning (Gemma)</div>
+          <div class="stage-step" id="stage-speaking"><span>🔊</span> Speaking</div>
+        </div>
+
+        <!-- Chat History -->
+        <div class="chat-messages" id="chat-messages">
+          <div class="msg system-msg">
+            <div class="msg-sender">SYSTEM</div>
+            <div class="msg-content">Welcome to JARVIS Edge AI! Say <strong>"Hey Jarvis"</strong> or press the BOOT button on your ESP32-S3. You can also type or use the Live Hardware Camera Inspector.</div>
+          </div>
+        </div>
+
+        <!-- Text Input & Voice Controls -->
+        <div class="chat-input-bar">
+          <input type="text" id="text-input" placeholder="Ask JARVIS an engineering question or debugging steps..." autocomplete="off">
+          <button id="btn-send-text" class="btn btn-primary">Send</button>
+          <button id="btn-record-mic" class="btn btn-danger">🎤 Mic</button>
+        </div>
+
+        <!-- Latency Profile Display -->
+        <div class="latency-bar" id="latency-bar">
+          <span class="lat-tag">STT: <strong id="lat-stt">--</strong></span>
+          <span class="lat-tag">Gemma 4: <strong id="lat-llm">--</strong></span>
+          <span class="lat-tag">TTS: <strong id="lat-tts">--</strong></span>
+          <span class="lat-tag total">Total: <strong id="lat-total">--</strong></span>
+        </div>
+      </section>
+    </main>
+  </div>
+
+  <script src="/static/app.js"></script>
+</body>
+</html>
