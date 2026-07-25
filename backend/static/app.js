@@ -1,26 +1,31 @@
 document.addEventListener('DOMContentLoaded', () => {
-  const cameraFeed = document.getElementById('camera-feed');
-  const frameCanvas = document.getElementById('frame-canvas');
+  const mobileLiveFrame = document.getElementById('mobile-live-frame');
   const videoOverlay = document.getElementById('video-overlay');
   const thinkingProgress = document.getElementById('thinking-progress');
   const overlayWarning = document.getElementById('overlay-warning');
   
-  const btnToggleCamera = document.getElementById('btn-toggle-camera');
-  const btnConnectMobile = document.getElementById('btn-connect-mobile');
-  const btnInspectNow = document.getElementById('btn-inspect-now');
-  const btnAutoStream = document.getElementById('btn-auto-stream');
+  const btnConnectPhone = document.getElementById('btn-connect-phone');
+  const btnAnalyzeNow = document.getElementById('btn-analyze-now');
+  const btnToggleLive = document.getElementById('btn-toggle-live');
   
   const qrModal = document.getElementById('qr-modal');
-  const btnCloseModal = document.getElementById('btnCloseModal');
+  const btnCloseModal = document.getElementById('btn-close-modal');
   const mobileUrl = document.getElementById('mobile-url');
   
+  const statusPhone = document.getElementById('status-phone');
+  const dotPhone = document.getElementById('dot-phone');
+  const badgeFrameAge = document.getElementById('badge-frame-age');
+  
   const diagnosisBox = document.getElementById('diagnosis-box');
+  const severityDetail = document.getElementById('severity-detail');
+  const fixDetail = document.getElementById('fix-detail');
+  
   const textInput = document.getElementById('text-input');
   const btnSendText = document.getElementById('btn-send-text');
   const btnRecordMic = document.getElementById('btn-record-mic');
   const chatMessages = document.getElementById('chat-messages');
   
-  const latStt = document.getElementById('lat-stt');
+  const latUpload = document.getElementById('lat-upload');
   const latLlm = document.getElementById('lat-llm');
   const latTts = document.getElementById('lat-tts');
   const latTotal = document.getElementById('lat-total');
@@ -28,146 +33,124 @@ document.addEventListener('DOMContentLoaded', () => {
   const volSlider = document.getElementById('vol-slider');
   const volVal = document.getElementById('vol-val');
   
-  let mediaStream = null;
-  let isCameraActive = false;
-  let autoInspectInterval = null;
-  let isAutoInspect = false;
+  let isLiveInspecting = false;
+  let liveInspectInterval = null;
   let mediaRecorder = null;
   let audioChunks = [];
   let isRecordingMic = false;
 
-  // Auto-Start WebCam on page load safely
-  startWebcam();
-
-  async function startWebcam() {
-    if (!navigator.mediaDevices || !navigator.mediaDevices.getUserMedia) {
-      console.warn("navigator.mediaDevices is unavailable in this browser context.");
-      return;
-    }
-    try {
-      mediaStream = await navigator.mediaDevices.getUserMedia({
-        video: { facingMode: 'environment', width: { ideal: 1280 }, height: { ideal: 720 } },
-        audio: false
-      });
-      cameraFeed.srcObject = mediaStream;
-      videoOverlay.style.display = 'none';
-      isCameraActive = true;
-      btnToggleCamera.textContent = '🛑 Stop Camera';
-      btnToggleCamera.className = 'btn btn-danger';
-    } catch (err) {
-      console.log('Auto camera prompt dismissed or unavailable:', err);
-    }
-  }
-
-  btnToggleCamera.addEventListener('click', async () => {
-    if (!isCameraActive) {
-      await startWebcam();
-    } else {
-      stopCamera();
-    }
-  });
-
-  function stopCamera() {
-    if (mediaStream) mediaStream.getTracks().forEach(t => t.stop());
-    cameraFeed.srcObject = null;
-    videoOverlay.style.display = 'flex';
-    isCameraActive = false;
-    btnToggleCamera.textContent = '📹 Start Web Camera';
-    btnToggleCamera.className = 'btn btn-primary';
-    stopAutoInspect();
-  }
-
-  // QR Modal toggle
-  btnConnectMobile.addEventListener('click', () => {
+  // 1. QR Modal Handler
+  btnConnectPhone.addEventListener('click', () => {
     mobileUrl.textContent = window.location.origin + '/mobile';
     qrModal.style.display = 'flex';
   });
 
-  const closeModalBtn = document.getElementById('btn-close-modal');
-  if (closeModalBtn) {
-    closeModalBtn.addEventListener('click', () => {
+  if (btnCloseModal) {
+    btnCloseModal.addEventListener('click', () => {
       qrModal.style.display = 'none';
     });
   }
 
-  // Analyze Frame with Gemma 4 Vision
-  btnInspectNow.addEventListener('click', analyzeCurrentFrame);
-
-  async function analyzeCurrentFrame() {
-    if (!isCameraActive) {
-      alert('Please start the Web Camera or connect Mobile Camera first.');
-      return;
-    }
-    
-    thinkingProgress.style.display = 'flex';
-    setPipelineStage('pipe-reasoning');
-
-    const ctx = frameCanvas.getContext('2d');
-    frameCanvas.width = cameraFeed.videoWidth || 640;
-    frameCanvas.height = cameraFeed.videoHeight || 480;
-    ctx.drawImage(cameraFeed, 0, 0, frameCanvas.width, frameCanvas.height);
-
-    frameCanvas.toBlob(async (blob) => {
-      const formData = new FormData();
-      formData.append('file', blob, 'circuit_snapshot.jpg');
-      formData.append('prompt', 'Analyze this breadboard circuit image. Identify components and detect any missing wires or hardware errors.');
-
-      try {
-        const res = await fetch('/vision/analyze', {
-          method: 'POST',
-          body: formData
-        });
-
+  // 2. Poll /mobile/latest Every 1.5 Seconds for Live Phone Stream
+  setInterval(async () => {
+    try {
+      const res = await fetch('/mobile/latest');
+      if (res.ok) {
         const data = await res.json();
-        thinkingProgress.style.display = 'none';
-        setPipelineStage('pipe-esp32');
-
-        if (data.status === 'success') {
-          diagnosisBox.innerHTML = `<p>${data.analysis}</p>`;
-          addChatMessage('JARVIS Vision AI', data.analysis, 'bot-msg');
-
-          if (data.analysis.toLowerCase().includes('missing') || data.analysis.toLowerCase().includes('disconnect') || data.analysis.toLowerCase().includes('warning')) {
-            overlayWarning.style.display = 'flex';
-            document.getElementById('wire-detail').textContent = '⚠ Warning Detected';
-          } else {
-            overlayWarning.style.display = 'none';
-            document.getElementById('wire-detail').textContent = 'All Connections Good';
+        
+        if (data.phone_connected) {
+          statusPhone.textContent = 'Connected';
+          dotPhone.className = 'dot green';
+          
+          if (data.last_frame_age_ms >= 0) {
+            const ageSec = (data.last_frame_age_ms / 1000).toFixed(1);
+            badgeFrameAge.textContent = `Last Frame: ${ageSec}s ago`;
+            latUpload.textContent = `${data.last_frame_age_ms} ms`;
           }
 
-          if (data.audio_url) {
-            const audio = new Audio(data.audio_url);
-            audio.play();
+          if (data.latest_image_url) {
+            mobileLiveFrame.src = data.latest_image_url;
+            mobileLiveFrame.style.display = 'block';
+            videoOverlay.style.display = 'none';
           }
+        } else {
+          statusPhone.textContent = 'Waiting for /mobile...';
+          dotPhone.className = 'dot red';
+          badgeFrameAge.textContent = 'Last Frame: Offline';
         }
-      } catch (err) {
-        thinkingProgress.style.display = 'none';
-        setPipelineStage('pipe-voice');
-        console.error('Vision analysis error:', err);
+
+        // Update Diagnosis Report if available
+        if (data.latest_report && data.latest_report.raw_analysis) {
+          diagnosisBox.innerHTML = `<p>${data.latest_report.raw_analysis}</p>`;
+          if (data.latest_report.severity) severityDetail.textContent = data.latest_report.severity;
+          if (data.latest_report.fix) fixDetail.textContent = data.latest_report.fix;
+        }
       }
-    }, 'image/jpeg', 0.85);
+    } catch (e) {
+      // silent poll catch
+    }
+  }, 1500);
+
+  // 3. Analyze Latest Mobile Frame with Gemma 4 Vision
+  btnAnalyzeNow.addEventListener('click', analyzeLatestMobileFrame);
+
+  async function analyzeLatestMobileFrame() {
+    thinkingProgress.style.display = 'flex';
+    setPipelineStage('pipe-gemma');
+
+    try {
+      const res = await fetch('/vision/analyze_latest', { method: 'POST' });
+      const data = await res.json();
+
+      thinkingProgress.style.display = 'none';
+      setPipelineStage('pipe-esp32');
+
+      if (data.status === 'success') {
+        diagnosisBox.innerHTML = `<p>${data.raw_analysis}</p>`;
+        addChatMessage('Gemma 4 Mobile Vision', data.raw_analysis, 'bot-msg');
+
+        severityDetail.textContent = data.severity;
+        fixDetail.textContent = data.fix;
+
+        if (data.severity === 'High') {
+          overlayWarning.style.display = 'flex';
+        } else {
+          overlayWarning.style.display = 'none';
+        }
+
+        if (data.latency_ms) {
+          latLlm.textContent = ((data.latency_ms - 800) / 1000).toFixed(2) + 's';
+          latTotal.textContent = (data.latency_ms / 1000).toFixed(2) + 's';
+        }
+      }
+    } catch (err) {
+      thinkingProgress.style.display = 'none';
+      setPipelineStage('pipe-phone');
+      console.error('Analyze error:', err);
+    }
   }
 
-  // Auto-Inspect Toggle
-  btnAutoStream.addEventListener('click', () => {
-    if (!isAutoInspect) {
-      isAutoInspect = true;
-      btnAutoStream.textContent = '⏹️ Stop Auto-Inspect';
-      btnAutoStream.className = 'btn btn-danger';
-      analyzeCurrentFrame();
-      autoInspectInterval = setInterval(analyzeCurrentFrame, 4000);
+  // 4. Live Inspection Mode Toggle
+  btnToggleLive.addEventListener('click', () => {
+    if (!isLiveInspecting) {
+      isLiveInspecting = true;
+      btnToggleLive.textContent = '⏹ Stop Live Inspection';
+      btnToggleLive.className = 'btn btn-danger';
+      analyzeLatestMobileFrame();
+      liveInspectInterval = setInterval(analyzeLatestMobileFrame, 4000);
     } else {
-      stopAutoInspect();
+      stopLiveInspection();
     }
   });
 
-  function stopAutoInspect() {
-    isAutoInspect = false;
-    if (autoInspectInterval) clearInterval(autoInspectInterval);
-    btnAutoStream.textContent = '🔄 Auto-Inspect (3s)';
-    btnAutoStream.className = 'btn btn-outline';
+  function stopLiveInspection() {
+    isLiveInspecting = false;
+    if (liveInspectInterval) clearInterval(liveInspectInterval);
+    btnToggleLive.textContent = '▶ Start Live Inspection';
+    btnToggleLive.className = 'btn btn-outline';
   }
 
-  // Text Prompt
+  // 5. Send Text Message
   btnSendText.addEventListener('click', sendTextMessage);
   textInput.addEventListener('keypress', (e) => {
     if (e.key === 'Enter') sendTextMessage();
@@ -211,14 +194,14 @@ document.addEventListener('DOMContentLoaded', () => {
         setPipelineStage('pipe-esp32');
       }
 
-      setTimeout(() => setPipelineStage('pipe-voice'), 3000);
+      setTimeout(() => setPipelineStage('pipe-phone'), 3000);
     } catch (err) {
-      setPipelineStage('pipe-voice');
+      setPipelineStage('pipe-phone');
       console.error('Chat error:', err);
     }
   }
 
-  // Voice Mic Recording
+  // 6. Mic Voice Recording
   btnRecordMic.addEventListener('click', async () => {
     if (!isRecordingMic) {
       try {
@@ -228,7 +211,7 @@ document.addEventListener('DOMContentLoaded', () => {
 
         mediaRecorder.ondataavailable = (e) => audioChunks.push(e.data);
         mediaRecorder.onstop = async () => {
-          setPipelineStage('pipe-stt');
+          setPipelineStage('pipe-fastapi');
           const audioBlob = new Blob(audioChunks, { type: 'audio/wav' });
           const formData = new FormData();
           formData.append('audio', audioBlob, 'mic_input.wav');
@@ -242,7 +225,6 @@ document.addEventListener('DOMContentLoaded', () => {
             addChatMessage('JARVIS', data.response, 'bot-msg');
 
             if (data.latency_profile) {
-              latStt.textContent = (data.latency_profile.stt_ms / 1000).toFixed(2) + 's';
               latLlm.textContent = (data.latency_profile.llm_ms / 1000).toFixed(2) + 's';
               latTts.textContent = (data.latency_profile.tts_ms / 1000).toFixed(2) + 's';
               latTotal.textContent = (data.latency_profile.total_ms / 1000).toFixed(2) + 's';
@@ -254,18 +236,18 @@ document.addEventListener('DOMContentLoaded', () => {
               setPipelineStage('pipe-esp32');
             }
 
-            setTimeout(() => setPipelineStage('pipe-voice'), 3000);
+            setTimeout(() => setPipelineStage('pipe-phone'), 3000);
           } catch (err) {
-            setPipelineStage('pipe-voice');
+            setPipelineStage('pipe-phone');
             console.error('Voice process error:', err);
           }
         };
 
         mediaRecorder.start();
         isRecordingMic = true;
-        btnRecordMic.textContent = '⏹️ Stop';
+        btnRecordMic.textContent = '⏹ Stop';
         btnRecordMic.className = 'btn btn-danger';
-        setPipelineStage('pipe-voice');
+        setPipelineStage('pipe-phone');
       } catch (err) {
         alert('Could not access microphone: ' + err.message);
       }
@@ -281,43 +263,6 @@ document.addEventListener('DOMContentLoaded', () => {
   volSlider.addEventListener('input', (e) => {
     volVal.textContent = e.target.value + '%';
   });
-
-  // Polling for latest phone camera snapshot / frame sent to PC
-  let lastSeenVisionTimestamp = 0;
-  setInterval(async () => {
-    try {
-      const res = await fetch('/vision/latest');
-      if (res.ok) {
-        const data = await res.json();
-        if (data.timestamp && data.timestamp > lastSeenVisionTimestamp) {
-          lastSeenVisionTimestamp = data.timestamp;
-          
-          // Update PC Hero Image
-          const heroImg = document.getElementById('hero-frame-img');
-          if (heroImg && data.image_url) {
-            heroImg.src = data.image_url;
-            heroImg.style.display = 'block';
-            cameraFeed.style.display = 'none';
-            videoOverlay.style.display = 'none';
-          }
-
-          // Update Health Report & Overlays
-          diagnosisBox.innerHTML = `<p>${data.analysis}</p>`;
-          addChatMessage('Phone Vision -> Gemma 4', data.analysis, 'bot-msg');
-
-          if (data.analysis.toLowerCase().includes('missing') || data.analysis.toLowerCase().includes('disconnect') || data.analysis.toLowerCase().includes('warning')) {
-            overlayWarning.style.display = 'flex';
-            document.getElementById('wire-detail').textContent = '⚠ Warning Detected';
-          } else {
-            overlayWarning.style.display = 'none';
-            document.getElementById('wire-detail').textContent = 'All Connections Good';
-          }
-        }
-      }
-    } catch (e) {
-      // silent catch for poll
-    }
-  }, 2000);
 
   // Helper Utilities
   function addChatMessage(sender, text, msgClass) {

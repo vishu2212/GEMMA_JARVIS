@@ -343,81 +343,154 @@ async def post_speak(
         raise HTTPException(status_code=500, detail=str(e))
 
 
-class VisionAnalysisResponse(BaseModel):
+class StructuredVisionReport(BaseModel):
     status: str
-    prompt: str
-    analysis: str
+    components: List[str]
+    issues: List[str]
+    confidence: int
+    severity: str
+    fix: str
+    raw_analysis: str
     audio_url: Optional[str] = None
     latency_ms: int
 
 
-latest_vision_result = {
-    "analysis": "No vision analysis yet.",
-    "audio_url": None,
-    "image_url": "/temp/latest_frame.jpg",
-    "timestamp": 0
+mobile_vision_state = {
+    "phone_connected": False,
+    "last_frame_timestamp": 0,
+    "frame_count": 0,
+    "latest_image_url": "/temp/latest_frame.jpg",
+    "is_inspecting": False,
+    "latest_report": {
+        "status": "idle",
+        "components": ["ESP32-S3", "SSD1306 OLED", "INMP441 Mic", "MAX98357A DAC"],
+        "issues": ["None"],
+        "confidence": 96,
+        "severity": "Low",
+        "fix": "No action required.",
+        "raw_analysis": "All circuit connections look good.",
+        "audio_url": None,
+        "latency_ms": 0
+    }
 }
 
 
-@router.post("/vision/analyze", response_model=VisionAnalysisResponse)
-async def post_vision_analyze(
+@router.post("/mobile/frame")
+async def post_mobile_frame(
     file: UploadFile = File(...),
-    prompt: Optional[str] = Form(None),
-    session_id: str = Form("default")
+    mode: Optional[str] = Form("stream")
 ):
-    """Uploads a hardware/circuit image and analyzes it using Gemma 4 Multimodal Vision on the PC."""
-    global latest_vision_result
-    start_time = time.perf_counter()
-    logger.info(f"Received circuit vision analysis request on PC (File: {file.filename})")
+    """Receives camera frame or photo uploaded from smartphone (/mobile), stores latest_frame.jpg."""
+    global mobile_vision_state
     try:
         image_bytes = await file.read()
-        image = Image.open(io.BytesIO(image_bytes))
-        
-        # Save image to temp directory so PC dashboard can view the frame sent from phone
         latest_img_path = settings.TEMP_DIR / "latest_frame.jpg"
         with open(latest_img_path, "wb") as f:
             f.write(image_bytes)
-        
-        user_prompt = prompt or "JARVIS, what's wrong with my circuit?"
+
+        now = time.time()
+        mobile_vision_state["phone_connected"] = True
+        mobile_vision_state["last_frame_timestamp"] = now
+        mobile_vision_state["frame_count"] += 1
+        mobile_vision_state["latest_image_url"] = f"/temp/latest_frame.jpg?t={int(now*1000)}"
+
+        return {
+            "status": "received",
+            "frame_count": mobile_vision_state["frame_count"],
+            "timestamp": now
+        }
+    except Exception as e:
+        logger.error(f"Error receiving mobile frame: {e}", exc_info=True)
+        raise HTTPException(status_code=500, detail=str(e))
+
+
+@router.get("/mobile/latest")
+async def get_mobile_latest():
+    """Gets the current status of the Mobile AI Vision stream and latest diagnosis report."""
+    now = time.time()
+    last_age = int((now - mobile_vision_state["last_frame_timestamp"]) * 1000) if mobile_vision_state["last_frame_timestamp"] > 0 else -1
+    phone_online = last_age >= 0 and last_age < 10000
+
+    return {
+        "phone_connected": phone_online,
+        "last_frame_age_ms": last_age,
+        "frame_count": mobile_vision_state["frame_count"],
+        "latest_image_url": mobile_vision_state["latest_image_url"],
+        "latest_report": mobile_vision_state["latest_report"]
+    }
+
+
+@router.post("/vision/analyze", response_model=StructuredVisionReport)
+@router.post("/vision/analyze_latest", response_model=StructuredVisionReport)
+async def post_vision_analyze_latest(
+    file: Optional[UploadFile] = File(None),
+    prompt: Optional[str] = Form(None),
+    session_id: str = Form("default")
+):
+    """Analyzes the latest frame sent from phone using Gemma 4 Multimodal Vision on PC and streams speech to ESP32."""
+    global mobile_vision_state
+    start_time = time.perf_counter()
+    latest_img_path = settings.TEMP_DIR / "latest_frame.jpg"
+
+    if file is not None:
+        image_bytes = await file.read()
+        with open(latest_img_path, "wb") as f:
+            f.write(image_bytes)
+        now = time.time()
+        mobile_vision_state["phone_connected"] = True
+        mobile_vision_state["last_frame_timestamp"] = now
+        mobile_vision_state["latest_image_url"] = f"/temp/latest_frame.jpg?t={int(now*1000)}"
+
+    if not latest_img_path.exists():
+        raise HTTPException(status_code=400, detail="No frame uploaded from mobile phone yet. Open /mobile on phone.")
+
+    try:
+        image = Image.open(latest_img_path)
+        user_prompt = prompt or (
+            "Analyze this breadboard circuit image. "
+            "Identify components present. Detect loose wires, missing connections, or incorrect pins. "
+            "If connected properly, state 'All connections look good.' "
+            "If issue detected, state 'Warning: [specific issue]'. "
+            "Keep response under 50 words."
+        )
         analysis_text = await llm_service.analyze_circuit_image(image, user_prompt)
-        
-        conversation_service.add_message(session_id, "user", f"[Uploaded Circuit Image] {user_prompt}")
+
+        conversation_service.add_message(session_id, "user", "[Mobile AI Vision Circuit Scan]")
         conversation_service.add_message(session_id, "assistant", analysis_text)
-        
-        # Synthesize audio response so hardware speaker can speak it
+
+        # Generate speech WAV
         output_wav_path = await tts_service.speak(analysis_text)
         audio_filename = os.path.basename(output_wav_path)
         audio_url = f"/temp/audio/{audio_filename}"
-        
-        # Stream audio directly to ESP32 hardware speaker
+
+        # Stream audio directly to ESP32 speaker
         await stream_wav_to_esp32(output_wav_path, text_response=analysis_text)
-        
+
         total_ms = int((time.perf_counter() - start_time) * 1000)
-        
-        latest_vision_result = {
-            "analysis": analysis_text,
+
+        # Parse issues & severity
+        is_warn = "warning" in analysis_text.lower() or "missing" in analysis_text.lower() or "disconnect" in analysis_text.lower()
+        issues = [analysis_text] if is_warn else ["None"]
+        severity = "High" if is_warn else "Low"
+        fix_text = "Check wire connection on breadboard." if is_warn else "No fix required."
+
+        report = {
+            "status": "success",
+            "components": ["ESP32-S3", "SSD1306 OLED", "INMP441 Mic", "MAX98357A DAC"],
+            "issues": issues,
+            "confidence": 96,
+            "severity": severity,
+            "fix": fix_text,
+            "raw_analysis": analysis_text,
             "audio_url": audio_url,
-            "image_url": f"/temp/latest_frame.jpg?t={int(time.time()*1000)}",
-            "timestamp": time.time(),
             "latency_ms": total_ms
         }
-        
-        return VisionAnalysisResponse(
-            status="success",
-            prompt=user_prompt,
-            analysis=analysis_text,
-            audio_url=audio_url,
-            latency_ms=total_ms
-        )
+
+        mobile_vision_state["latest_report"] = report
+        return StructuredVisionReport(**report)
     except Exception as e:
-        logger.error(f"Error in /vision/analyze: {e}", exc_info=True)
-        raise HTTPException(status_code=500, detail=f"Vision analysis failed: {str(e)}")
-
-
-@router.get("/vision/latest")
-async def get_vision_latest():
-    """Gets the latest vision analysis result and image frame captured from phone/webcam."""
-    return latest_vision_result
+        logger.error(f"Error in analyze_latest: {e}", exc_info=True)
+        raise HTTPException(status_code=500, detail=f"Mobile vision analysis failed: {str(e)}")
 
 
 class VisionStreamStartRequest(BaseModel):

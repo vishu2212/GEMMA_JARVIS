@@ -3,7 +3,7 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-  <title>JARVIS Edge AI — Live Hardware AI Copilot</title>
+  <title>JARVIS Edge AI — Mobile Vision Copilot</title>
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;500;600;700;800&family=JetBrains+Mono:wght@400;500;600&display=swap" rel="stylesheet">
@@ -18,78 +18,75 @@
       <div class="brand">
         <div class="logo-icon">🤖</div>
         <div class="brand-text">
-          <h1>JARVIS <span>EDGE AI COPILOT</span></h1>
-          <p class="subtitle">Real-Time Embedded Systems & Hardware Assistant • Gemma 4</p>
+          <h1>JARVIS <span>MOBILE AI VISION</span></h1>
+          <p class="subtitle">Embedded AI Engineering Copilot • Gemma 4 Multimodal</p>
         </div>
       </div>
       <div class="status-pills">
         <div class="pill" id="pill-esp32"><span class="dot green"></span> ESP32: <strong id="status-esp32">Connecting...</strong></div>
+        <div class="pill" id="pill-phone"><span class="dot green" id="dot-phone"></span> Phone: <strong id="status-phone">Waiting for /mobile...</strong></div>
         <div class="pill"><span class="dot green"></span> Gemma 4: <strong>gemma-4-31b-it</strong></div>
         <div class="pill"><span class="dot green"></span> Whisper: <strong>Small (CUDA)</strong></div>
         <div class="pill"><span class="dot green"></span> Piper: <strong>Lessac Neural</strong></div>
-        <div class="pill" id="pill-cam"><span class="dot green"></span> Mobile Cam: <strong id="cam-status">Ready</strong></div>
       </div>
     </header>
 
-    <!-- Live AI Pipeline Stage Tracker -->
+    <!-- Full Pipeline Tracker -->
     <div class="full-pipeline-tracker">
-      <div class="pipe-step" id="pipe-voice"><span class="icon">🎤</span> Voice Input</div>
+      <div class="pipe-step" id="pipe-phone"><span class="icon">📱</span> Phone Lens</div>
       <div class="pipe-arrow">➜</div>
-      <div class="pipe-step" id="pipe-stt"><span class="icon">⚡</span> Whisper STT</div>
+      <div class="pipe-step" id="pipe-fastapi"><span class="icon">⚡</span> FastAPI Backend</div>
       <div class="pipe-arrow">➜</div>
-      <div class="pipe-step" id="pipe-gemma"><span class="icon">🧠</span> Gemma 4 API</div>
+      <div class="pipe-step" id="pipe-gemma"><span class="icon">🧠</span> Gemma 4 Vision</div>
       <div class="pipe-arrow">➜</div>
-      <div class="pipe-step" id="pipe-reasoning"><span class="icon">🔍</span> Hardware Reasoning</div>
+      <div class="pipe-step" id="pipe-reasoning"><span class="icon">🔍</span> Circuit Diagnosis</div>
       <div class="pipe-arrow">➜</div>
       <div class="pipe-step" id="pipe-tts"><span class="icon">🎙️</span> Piper Neural TTS</div>
       <div class="pipe-arrow">➜</div>
       <div class="pipe-step" id="pipe-esp32"><span class="icon">🔊</span> ESP32 Speaker</div>
     </div>
 
-    <!-- Main Grid Layout (Hero Camera Enlarged) -->
+    <!-- Main Grid Layout -->
     <main class="dashboard-grid hero-grid">
       
-      <!-- Left Column: Hero Video Stream & Visual Overlay -->
+      <!-- Left Column: Hero Mobile Stream Card -->
       <section class="card vision-hero-card">
         <div class="card-header">
-          <h2>🎥 Live AI Hardware Copilot</h2>
+          <h2>📱 Mobile AI Vision Feed</h2>
           <div class="header-badges">
-            <span class="badge badge-cyan">1080p • 30 FPS</span>
-            <span class="badge badge-purple">Gemma 4 Multimodal Vision</span>
+            <span class="badge badge-cyan" id="badge-frame-age">Last Frame: Waiting</span>
+            <span class="badge badge-purple" id="badge-resolution">1920×1080 • 3s Sampling</span>
           </div>
         </div>
 
-        <!-- Enlarged Camera Frame with Overlays -->
+        <!-- Hero Mobile Camera Feed Display -->
         <div class="video-container hero-video">
-          <video id="camera-feed" autoplay playsinline muted></video>
-          <img id="hero-frame-img" style="width:100%; height:100%; object-fit:cover; display:none;" />
-          <canvas id="frame-canvas" style="display:none;"></canvas>
-
-          <!-- Component Visual Labels Overlaid on Video -->
+          <img id="mobile-live-frame" style="width:100%; height:100%; object-fit:cover; display:none;" />
+          
+          <!-- Component Visual Overlays -->
           <div class="overlay-labels" id="overlay-labels">
             <div class="overlay-badge pos-esp32"><span class="check">✓</span> ESP32-S3</div>
             <div class="overlay-badge pos-oled"><span class="check">✓</span> SSD1306 OLED</div>
             <div class="overlay-badge pos-mic"><span class="check">✓</span> INMP441 Mic</div>
             <div class="overlay-badge pos-dac"><span class="check">✓</span> MAX98357A DAC</div>
-            <div class="overlay-badge pos-warning" id="overlay-warning" style="display:none;"><span class="warn">⚠</span> GND Missing</div>
+            <div class="overlay-badge pos-warning" id="overlay-warning" style="display:none;"><span class="warn">⚠</span> Disconnection Alert</div>
           </div>
 
           <div class="video-overlay" id="video-overlay">
-            <span class="pulse-icon">📷</span>
-            <p>Click "Start Camera" or "Connect Mobile Camera"</p>
+            <span class="pulse-icon">📱</span>
+            <p>Scan QR code below or open <strong>http://192.168.1.111:8001/mobile</strong> on phone</p>
           </div>
           
           <div class="thinking-progress" id="thinking-progress" style="display:none;">
-            <div class="progress-text">🔍 Gemma 4 Vision Inspecting Hardware...</div>
-            <div class="progress-bar-wrap"><div class="progress-bar-fill" id="progress-bar-fill"></div></div>
+            <div class="progress-text">🔍 Gemma 4 Vision Analyzing Mobile Frame...</div>
+            <div class="progress-bar-wrap"><div class="progress-bar-fill"></div></div>
           </div>
         </div>
 
         <div class="camera-controls">
-          <button id="btn-toggle-camera" class="btn btn-primary">📹 Start Web Camera</button>
-          <button id="btn-connect-mobile" class="btn btn-accent">📱 Connect Mobile Camera</button>
-          <button id="btn-inspect-now" class="btn btn-outline">🔍 Analyze Circuit Now</button>
-          <button id="btn-auto-stream" class="btn btn-outline">🔄 Auto-Inspect (3s)</button>
+          <button id="btn-connect-phone" class="btn btn-primary">📱 Connect Phone Camera</button>
+          <button id="btn-analyze-now" class="btn btn-accent">🔍 Analyze Circuit Now</button>
+          <button id="btn-toggle-live" class="btn btn-outline">▶ Start Live Inspection</button>
         </div>
 
         <!-- Structured Hardware Health Report -->
@@ -104,17 +101,17 @@
             <div class="health-item ok"><span class="status-icon">🟢</span> <strong>SSD1306 OLED</strong> <span class="detail">Display (0x3C)</span></div>
             <div class="health-item ok"><span class="status-icon">🟢</span> <strong>INMP441 Mic</strong> <span class="detail">I2S Audio Input</span></div>
             <div class="health-item ok"><span class="status-icon">🟢</span> <strong>MAX98357A</strong> <span class="detail">Class-D DAC Speaker</span></div>
-            <div class="health-item warn" id="item-wire-status"><span class="status-icon">🟠</span> <strong>Pin Connections</strong> <span class="detail" id="wire-detail">Checking...</span></div>
-            <div class="health-item est"><span class="status-icon">⚡</span> <strong>Estimated Fix Time</strong> <span class="detail" id="fix-time">15 Seconds</span></div>
+            <div class="health-item warn" id="item-severity"><span class="status-icon">🟠</span> <strong>Severity Level</strong> <span class="detail" id="severity-detail">Low</span></div>
+            <div class="health-item est"><span class="status-icon">⚡</span> <strong>Recommended Fix</strong> <span class="detail" id="fix-detail">No action required</span></div>
           </div>
 
           <div class="diagnosis-box" id="diagnosis-box">
-            <p class="placeholder-text">Live circuit analysis will appear here automatically when scanning.</p>
+            <p class="placeholder-text">Open /mobile on phone to stream circuit feed. Diagnosis will be displayed here and spoken on ESP32 speaker.</p>
           </div>
         </div>
       </section>
 
-      <!-- Right Column: Voice Console & Interactive Controls -->
+      <!-- Right Column: Voice & Assistant Console -->
       <section class="card chat-card">
         <div class="card-header">
           <h2>💬 Voice & Engineering Console</h2>
@@ -129,36 +126,36 @@
         <div class="chat-messages" id="chat-messages">
           <div class="msg system-msg">
             <div class="msg-sender">JARVIS SYSTEM</div>
-            <div class="msg-content">Welcome! Say <strong>"Hey Jarvis"</strong>, press the <strong>BOOT button</strong> on your ESP32, or click <strong>Connect Mobile Camera</strong> to stream your phone camera live.</div>
+            <div class="msg-content">Welcome to JARVIS Mobile AI Vision! Open <strong>http://192.168.1.111:8001/mobile</strong> on your smartphone to use it as a wireless AI inspection camera.</div>
           </div>
         </div>
 
-        <!-- Text Input & Voice Controls -->
+        <!-- Text Input Bar -->
         <div class="chat-input-bar">
-          <input type="text" id="text-input" placeholder="Ask JARVIS about circuit wiring, FreeRTOS, or hardware fixes..." autocomplete="off">
+          <input type="text" id="text-input" placeholder="Ask JARVIS an engineering question or debugging steps..." autocomplete="off">
           <button id="btn-send-text" class="btn btn-primary">Send</button>
           <button id="btn-record-mic" class="btn btn-danger">🎤 Mic</button>
         </div>
 
         <!-- Latency Statistics Profile -->
         <div class="latency-bar" id="latency-bar">
-          <span class="lat-tag">STT (Whisper): <strong id="lat-stt">0.80 s</strong></span>
-          <span class="lat-tag">Gemma 4: <strong id="lat-llm">1.50 s</strong></span>
-          <span class="lat-tag">TTS (Piper): <strong id="lat-tts">0.50 s</strong></span>
-          <span class="lat-tag total">Total: <strong id="lat-total">3.30 s</strong></span>
+          <span class="lat-tag">Frame Upload: <strong id="lat-upload">280 ms</strong></span>
+          <span class="lat-tag">Gemma 4: <strong id="lat-llm">2.10 s</strong></span>
+          <span class="lat-tag">Piper TTS: <strong id="lat-tts">0.45 s</strong></span>
+          <span class="lat-tag total">Total: <strong id="lat-total">2.83 s</strong></span>
         </div>
       </section>
     </main>
   </div>
 
-  <!-- Mobile Camera QR Code Modal -->
+  <!-- QR Connection Modal -->
   <div class="modal-backdrop" id="qr-modal" style="display:none;">
     <div class="modal-card">
       <div class="modal-header">
-        <h3>📱 Connect Mobile Camera</h3>
+        <h3>📱 Connect Smartphone Camera</h3>
         <button id="btn-close-modal" class="btn-close">✖</button>
       </div>
-      <p>Open your phone's browser or camera and go to:</p>
+      <p>Scan this link or open in your phone browser:</p>
       <div class="url-display" id="mobile-url">http://192.168.1.111:8001/mobile</div>
       <div class="modal-footer">
         <a href="/mobile" target="_blank" class="btn btn-primary">Open Mobile AI Lens</a>
