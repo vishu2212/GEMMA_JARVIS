@@ -127,6 +127,11 @@
       scanEffect.style.display = "none";
     }
 
+    const API_BASE = (typeof window !== 'undefined' && window.ENV_API_URL)
+      || (window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1' 
+          ? 'http://localhost:8001' 
+          : window.location.origin);
+
     async function sendFrameToPC() {
       if (!stream) return;
       const ctx = canvas.getContext('2d');
@@ -139,7 +144,7 @@
         const formData = new FormData();
         formData.append('file', blob, 'mobile_frame.jpg');
         try {
-          await fetch('/mobile/frame', { method: 'POST', body: formData });
+          await fetch(`${API_BASE}/mobile/frame`, { method: 'POST', body: formData });
         } catch (err) {
           console.error('Error streaming frame to PC:', err);
         }
@@ -166,7 +171,7 @@
       formData.append('file', file);
 
       try {
-        const res = await fetch('/mobile/frame', { method: 'POST', body: formData });
+        const res = await fetch(`${API_BASE}/mobile/frame`, { method: 'POST', body: formData });
         const data = await res.json();
         if (data.status === 'received') {
           statusText.textContent = '✓ Frame Uploaded! Tap Inspect on PC or Snap Another Photo.';
