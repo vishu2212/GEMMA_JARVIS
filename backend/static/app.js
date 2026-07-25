@@ -246,18 +246,24 @@ document.addEventListener('DOMContentLoaded', () => {
       console.error('Error uploading PC photo:', err);
     }
   });
+  let lastFetchedUrl = '';
   setInterval(async () => {
     try {
       const res = await fetch('/mobile/latest');
       if (!res.ok) return;
       const data = await res.json();
 
-      if (data.latest_image_url) {
-        mobileLiveFrame.src = data.latest_image_url;
-        mobileLiveFrame.style.display = 'block';
-        camEmpty.style.display = 'none';
-        camLiveBadge.style.display = 'flex';
-        camFrameBadge.style.display = 'block';
+      if (data.latest_image_url && data.latest_image_url !== lastFetchedUrl) {
+        lastFetchedUrl = data.latest_image_url;
+        const imgPreload = new Image();
+        imgPreload.onload = () => {
+          mobileLiveFrame.src = imgPreload.src;
+          mobileLiveFrame.style.display = 'block';
+          camEmpty.style.display = 'none';
+          camLiveBadge.style.display = 'flex';
+          camFrameBadge.style.display = 'block';
+        };
+        imgPreload.src = data.latest_image_url;
       }
 
       if (data.phone_connected) {
@@ -279,7 +285,7 @@ document.addEventListener('DOMContentLoaded', () => {
         badgeFrameAge.className = 'badge badge-amber';
       }
     } catch (e) {}
-  }, 1500);
+  }, 250);
 
   /* ── Analyze Latest Frame ─────────────────────────────────── */
   btnAnalyzeNow?.addEventListener('click', analyzeLatestMobileFrame);

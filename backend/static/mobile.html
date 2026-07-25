@@ -95,8 +95,8 @@
         btnStream.textContent = "🛑 Stop Live Stream";
         btnStream.classList.add("btn-danger");
 
-        // Automatically sample frame every 2.5 seconds to PC backend
-        frameInterval = setInterval(sendFrameToPC, 2500);
+        // Automatically stream frames to PC Mission Control (300ms = ~3.3 FPS)
+        frameInterval = setInterval(sendFrameToPC, 300);
       } catch (err) {
         console.error("Camera access error:", err);
         statusText.textContent = "Camera Permission Denied. Tap 'Snap Photo' Below!";
