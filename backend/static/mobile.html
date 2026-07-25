@@ -138,16 +138,15 @@
         if (!blob) return;
         const formData = new FormData();
         formData.append('file', blob, 'mobile_frame.jpg');
-        formData.append('prompt', 'Analyze this breadboard circuit image. Identify components and check for missing wires or hardware errors.');
         try {
-          await fetch('/vision/analyze', { method: 'POST', body: formData });
+          await fetch('/mobile/frame', { method: 'POST', body: formData });
         } catch (err) {
           console.error('Error streaming frame to PC:', err);
         }
       }, 'image/jpeg', 0.85);
     }
 
-    // 2. High-Res Photo Fallback Button
+    // 2. Native Camera High-Res Photo Fallback (Works on 100% of HTTP mobile browsers)
     btnSnap.addEventListener('click', () => {
       fileInput.click();
     });
@@ -161,20 +160,19 @@
       video.style.display = 'none';
       placeholderView.style.display = 'none';
 
-      statusText.textContent = 'Sending Photo to PC for Gemma 4 Analysis...';
+      statusText.textContent = 'Uploading Photo & Analyzing with Gemma 4...';
 
       const formData = new FormData();
       formData.append('file', file);
-      formData.append('prompt', 'Analyze this breadboard circuit image. Identify components and check for missing wires or hardware errors.');
 
       try {
-        const res = await fetch('/vision/analyze', { method: 'POST', body: formData });
+        const res = await fetch('/mobile/frame', { method: 'POST', body: formData });
         const data = await res.json();
-        if (data.status === 'success') {
-          statusText.textContent = 'Analysis Complete! Speaking over ESP32 Speaker...';
+        if (data.status === 'received') {
+          statusText.textContent = '✓ Frame Uploaded! Tap Inspect on PC or Snap Another Photo.';
         }
       } catch (err) {
-        statusText.textContent = 'Error Sending Photo to PC';
+        statusText.textContent = 'Error Uploading Photo to PC';
       }
     });
   </script>
