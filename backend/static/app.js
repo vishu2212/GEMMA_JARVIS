@@ -867,7 +867,7 @@ document.addEventListener('DOMContentLoaded', () => {
 
     ctx.clearRect(0, 0, w, h);
 
-    if (!arDetectionEnabled || mobileLiveFrame.style.display === 'none') {
+    if (!arDetectionEnabled || camEmpty.style.display !== 'none' || mobileLiveFrame.style.display === 'none') {
       arAnimFrame = requestAnimationFrame(renderArDetectionOverlay);
       return;
     }

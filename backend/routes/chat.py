@@ -401,11 +401,12 @@ class StructuredVisionReport(BaseModel):
     latency_ms: int
 
 
+_latest_path = settings.TEMP_DIR / "latest_frame.jpg"
 mobile_vision_state = {
-    "phone_connected": False,
-    "last_frame_timestamp": 0,
-    "frame_count": 0,
-    "latest_image_url": "/temp/latest_frame.jpg",
+    "phone_connected": True if _latest_path.exists() else False,
+    "last_frame_timestamp": time.time() if _latest_path.exists() else 0,
+    "frame_count": 1 if _latest_path.exists() else 0,
+    "latest_image_url": f"/temp/latest_frame.jpg?t={int(time.time()*1000)}" if _latest_path.exists() else "",
     "upload_latency_ms": 165,
     "latest_report": {
         "status": "idle",
