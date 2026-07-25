@@ -300,7 +300,40 @@ document.addEventListener('DOMContentLoaded', () => {
       alert('Could not access PC webcam. Please ensure camera permissions are granted.');
     }
   });
-  let lastFetchedUrl = '';
+  /* ── WebSocket Live Video Stream Subscriber ───────────────────── */
+  function connectVideoWsStream() {
+    const wsProto = window.location.protocol === 'https:' ? 'wss:' : 'ws:';
+    const videoWsUrl = `${wsProto}//${window.location.host}/ws/video`;
+    let ws = null;
+
+    try {
+      ws = new WebSocket(videoWsUrl);
+      ws.onmessage = (event) => {
+        try {
+          const msg = JSON.parse(event.data);
+          if (msg.event === 'frame' && msg.data) {
+            mobileLiveFrame.src = msg.data;
+            if (!pcWebcamStream) {
+              mobileLiveFrame.style.display = 'block';
+              camEmpty.style.display = 'none';
+              camLiveBadge.style.display = 'flex';
+              camFrameBadge.style.display = 'block';
+              camFrameBadge.textContent = 'Live Phone Stream';
+              statusPhone.textContent = 'Connected';
+              dotPhone.className = 'dot live';
+              badgeFrameAge.textContent = 'Live';
+              badgeFrameAge.className = 'badge badge-green';
+            }
+          }
+        } catch (e) {}
+      };
+      ws.onclose = () => setTimeout(connectVideoWsStream, 3000);
+      ws.onerror = () => {};
+    } catch (e) {
+      setTimeout(connectVideoWsStream, 5000);
+    }
+  }
+  connectVideoWsStream();
   setInterval(async () => {
     try {
       const res = await fetch('/mobile/latest');

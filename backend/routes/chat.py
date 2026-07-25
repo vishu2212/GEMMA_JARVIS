@@ -13,7 +13,8 @@ import numpy as np
 from PIL import Image
 from typing import List, Optional
 from fastapi import APIRouter, File, UploadFile, Form, BackgroundTasks, HTTPException, WebSocket, WebSocketDisconnect
-from fastapi.responses import FileResponse
+import base64
+from fastapi.responses import FileResponse, StreamingResponse
 from pydantic import BaseModel
 
 from config import settings
@@ -427,13 +428,74 @@ mobile_vision_state = {
     }
 }
 
+# WebSocket subscribers for live camera stream broadcast to React/Web Dashboard
+video_ws_clients: set[WebSocket] = set()
+
+async def broadcast_video_frame(image_bytes: bytes):
+    """Broadcasts incoming camera frame to all connected Dashboard clients in real-time."""
+    if not video_ws_clients:
+        return
+    b64 = base64.b64encode(image_bytes).decode("utf-8")
+    payload = json.dumps({"event": "frame", "data": f"data:image/jpeg;base64,{b64}"})
+    disconnected = set()
+    for client in video_ws_clients:
+        try:
+            await client.send_text(payload)
+        except Exception:
+            disconnected.add(client)
+    for d in disconnected:
+        video_ws_clients.discard(d)
+
+
+@router.websocket("/ws/video")
+async def websocket_video_feed(websocket: WebSocket):
+    """WebSocket connection for broadcasting live camera stream directly to Dashboard."""
+    await websocket.accept()
+    video_ws_clients.add(websocket)
+    logger.info(f"Video WS client connected. Total active subscribers: {len(video_ws_clients)}")
+    try:
+        latest_img_path = settings.TEMP_DIR / "latest_frame.jpg"
+        if latest_img_path.exists():
+            with open(latest_img_path, "rb") as f:
+                b64 = base64.b64encode(f.read()).decode("utf-8")
+                await websocket.send_text(json.dumps({"event": "frame", "data": f"data:image/jpeg;base64,{b64}"}))
+        while True:
+            await websocket.receive_text()
+    except WebSocketDisconnect:
+        video_ws_clients.discard(websocket)
+        logger.info("Video WS client disconnected.")
+    except Exception:
+        video_ws_clients.discard(websocket)
+
+
+@router.get("/video_feed")
+async def get_video_mjpeg_feed():
+    """MJPEG Video Stream endpoint for direct embedding in <img src="/video_feed">."""
+    async def frame_generator():
+        latest_img_path = settings.TEMP_DIR / "latest_frame.jpg"
+        last_mtime = 0
+        while True:
+            if latest_img_path.exists():
+                try:
+                    mtime = latest_img_path.stat().st_mtime
+                    if mtime > last_mtime:
+                        last_mtime = mtime
+                        with open(latest_img_path, "rb") as f:
+                            frame_bytes = f.read()
+                        yield (b'--frame\r\n'
+                               b'Content-Type: image/jpeg\r\n\r\n' + frame_bytes + b'\r\n')
+                except Exception: pass
+            await asyncio.sleep(0.08)
+
+    return StreamingResponse(frame_generator(), media_type="multipart/x-mixed-replace; boundary=frame")
+
 
 @router.post("/mobile/frame")
 async def post_mobile_frame(
     file: UploadFile = File(...),
     mode: Optional[str] = Form("stream")
 ):
-    """Receives camera frame or photo uploaded from smartphone (/mobile), stores latest_frame.jpg."""
+    """Receives camera frame or photo uploaded from smartphone (/mobile), stores latest_frame.jpg and broadcasts."""
     global mobile_vision_state
     recv_start = time.perf_counter()
     try:
@@ -449,6 +511,9 @@ async def post_mobile_frame(
         mobile_vision_state["frame_count"] += 1
         mobile_vision_state["upload_latency_ms"] = transfer_ms
         mobile_vision_state["latest_image_url"] = f"/temp/latest_frame.jpg?t={int(now*1000)}"
+
+        # Broadcast frame in real-time over WebSocket to Dashboard
+        asyncio.create_task(broadcast_video_frame(image_bytes))
 
         return {
             "status": "received",
