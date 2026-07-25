@@ -129,9 +129,5 @@ def generate_self_signed_cert():
         return None, None
 
 if __name__ == "__main__":
-    cert_file, key_file = generate_self_signed_cert()
-    if cert_file and key_file:
-        logger.info("Starting HTTPS Server for Live Mobile Camera Streaming...")
-        uvicorn.run("server:app", host=settings.HOST, port=settings.PORT, ssl_certfile=cert_file, ssl_keyfile=key_file, reload=False)
-    else:
-        uvicorn.run("server:app", host=settings.HOST, port=settings.PORT, reload=False)
+    logger.info("Starting JARVIS HTTP & WebSocket Server on port 8001...")
+    uvicorn.run("server:app", host=settings.HOST, port=settings.PORT, reload=False)

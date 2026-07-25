@@ -87,35 +87,35 @@ void led_off(void) {
 /* ── State → Colour Mapping ─────────────────────────────────
    Colour    State            Meaning
    ──────────────────────────────────────────────────────────
-   White dim BOOT             Starting up
-   Amber     WIFI_CONNECTING  Waiting for network
-   Green     IDLE             Ready — say "Hey JARVIS"
-   Blue      LISTENING        Microphone active
-   Yellow    PROCESSING       Gemma 4 is thinking
-   Purple    SPEAKING         Piper TTS playing
-   Red       ERROR            Something went wrong
+   White dim LED_STATE_BOOT             Starting up
+   Amber     LED_STATE_WIFI_CONNECTING  Waiting for network
+   Green     LED_STATE_IDLE             Ready — say "Hey JARVIS"
+   Blue      LED_STATE_LISTENING        Microphone active
+   Yellow    LED_STATE_PROCESSING       Gemma 4 is thinking
+   Purple    LED_STATE_SPEAKING         Piper TTS playing
+   Red       LED_STATE_ERROR            Something went wrong
    ────────────────────────────────────────────────────────── */
-void led_set_state(app_state_t state) {
+void led_set_state(led_state_t state) {
     switch (state) {
-        case APP_BOOT:
+        case LED_STATE_BOOT:
             led_set_rgb(255, 255, 255);   /* White — booting         */
             break;
-        case APP_WIFI_CONNECTING:
+        case LED_STATE_WIFI_CONNECTING:
             led_set_rgb(255, 140,   0);   /* Amber — connecting WiFi */
             break;
-        case APP_IDLE:
+        case LED_STATE_IDLE:
             led_set_rgb(  0, 255,   0);   /* Green — ready           */
             break;
-        case APP_LISTENING:
+        case LED_STATE_LISTENING:
             led_set_rgb(  0, 80,  255);   /* Blue  — listening       */
             break;
-        case APP_PROCESSING:
+        case LED_STATE_PROCESSING:
             led_set_rgb(255, 220,   0);   /* Yellow — thinking       */
             break;
-        case APP_SPEAKING:
+        case LED_STATE_SPEAKING:
             led_set_rgb(160,  32, 240);   /* Purple — speaking       */
             break;
-        case APP_ERROR:
+        case LED_STATE_ERROR:
             led_set_rgb(255,   0,   0);   /* Red — error             */
             break;
         default:

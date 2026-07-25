@@ -2,19 +2,17 @@
 
 #include "driver/gpio.h"
 #include "led_strip.h"
-#include "app_state.h"
 #include <stdbool.h>
 
-/* ── Colour presets (R, G, B) ─────────────────────────────────
-   State          Colour
-   BOOT           White dim   (boot splash)
-   WIFI_CONNECT   Amber pulse (waiting for network)
-   IDLE / READY   Green       (ready to talk)
-   LISTENING      Blue        (hearing you)
-   PROCESSING     Yellow      (Gemma thinking)
-   SPEAKING       Purple      (Piper speaking)
-   ERROR          Red         (something went wrong)
-   ──────────────────────────────────────────────────────────── */
+typedef enum {
+    LED_STATE_BOOT = 0,
+    LED_STATE_WIFI_CONNECTING,
+    LED_STATE_IDLE,
+    LED_STATE_LISTENING,
+    LED_STATE_PROCESSING,
+    LED_STATE_SPEAKING,
+    LED_STATE_ERROR
+} led_state_t;
 
 #define LED_BRIGHTNESS   12   /* 0–255 — keep low so it's not blinding */
 
@@ -32,7 +30,6 @@ void led_toggle(status_led_t *led);
 
 /**
  * @brief  Initialise the WS2812 NeoPixel on the given GPIO via RMT.
- *         Must be called once at startup before any led_set_* call.
  * @param  gpio  GPIO number of the data line (GPIO_NUM_48 on ESP32-S3-DevKit-N8R2)
  */
 void led_rgb_init(gpio_num_t gpio);
@@ -46,10 +43,10 @@ void led_rgb_init(gpio_num_t gpio);
 void led_set_rgb(uint8_t r, uint8_t g, uint8_t b);
 
 /**
- * @brief  Set LED colour to match an app_state_t.
+ * @brief  Set LED colour to match a led_state_t.
  *         Maps states → canonical JARVIS status colours.
  */
-void led_set_state(app_state_t state);
+void led_set_state(led_state_t state);
 
 /**
  * @brief  Turn the NeoPixel off.
