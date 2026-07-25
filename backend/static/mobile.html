@@ -42,6 +42,14 @@
     <canvas id="mobile-canvas"></canvas>
   </div>
 
+  <div id="server-config-bar" style="margin: 10px 16px; padding: 10px; background: rgba(239, 68, 68, 0.15); border: 1px solid rgba(239, 68, 68, 0.4); border-radius: 10px; text-align: center; display: none;">
+    <div style="font-size:0.8rem; color:#fca5a5; font-weight:700; margin-bottom:6px;">⚠️ PC Server URL (e.g. http://192.168.1.111:8001):</div>
+    <div style="display:flex; gap:6px; justify-content:center;">
+      <input type="text" id="input-api-url" placeholder="http://192.168.1.111:8001" style="background:#09090b; border:1px solid #3f3f46; color:#fff; padding:6px 10px; border-radius:6px; font-size:0.8rem; width:70%;">
+      <button id="btn-save-api-url" style="background:#06b6d4; color:#000; font-weight:700; border:none; padding:6px 12px; border-radius:6px; font-size:0.8rem;">Save</button>
+    </div>
+  </div>
+
   <div class="footer">
     <div id="status-box" style="margin-bottom: 0.85rem;">
       <span class="status-badge"><span class="dot"></span> <span id="status-text">Connecting Rear Camera...</span></span>
@@ -67,6 +75,10 @@
     const statusText = document.getElementById('status-text');
     const scanEffect = document.getElementById('scan-effect');
 
+    const configBar = document.getElementById('server-config-bar');
+    const inputApiUrl = document.getElementById('input-api-url');
+    const btnSaveApiUrl = document.getElementById('btn-save-api-url');
+
     let stream = null;
     let frameInterval = null;
 
@@ -74,63 +86,49 @@
     startRearCamera();
 
     async function startRearCamera() {
-      if (!navigator.mediaDevices || !navigator.mediaDevices.getUserMedia) {
-        console.warn("navigator.mediaDevices is unavailable in this HTTP browser context.");
-        statusText.textContent = "HTTPS Required for Live Stream. Tap 'Snap High-Res Photo' Below!";
-        video.style.display = "none";
-        placeholderView.style.display = "flex";
-        scanEffect.style.display = "none";
-        return;
-      }
-
       try {
         stream = await navigator.mediaDevices.getUserMedia({
-          video: { facingMode: { ideal: 'environment' }, width: { ideal: 1280 }, height: { ideal: 720 } },
+          video: { facingMode: { ideal: "environment" }, width: { ideal: 1280 }, height: { ideal: 720 } },
           audio: false
         });
         video.srcObject = stream;
         video.style.display = "block";
         placeholderView.style.display = "none";
-        statusText.textContent = "Streaming Live Frames to PC & ESP32 Speaker";
-        btnStream.textContent = "🛑 Stop Live Stream";
-        btnStream.classList.add("btn-danger");
+        statusText.textContent = "Rear Camera Lens Live";
 
-        // Automatically stream frames to PC Mission Control (300ms = ~3.3 FPS)
-        frameInterval = setInterval(sendFrameToPC, 300);
+        // Auto-start live stream to PC
+        startLiveStream();
       } catch (err) {
-        console.error("Camera access error:", err);
-        statusText.textContent = "Camera Permission Denied. Tap 'Snap Photo' Below!";
+        console.error("Rear camera error:", err);
+        statusText.textContent = "Using Native Camera Photo Snap";
         video.style.display = "none";
         placeholderView.style.display = "flex";
         scanEffect.style.display = "none";
       }
     }
 
-    btnStream.addEventListener("click", () => {
-      if (!stream) {
-        startRearCamera();
-      } else {
-        stopRearCamera();
-      }
-    });
-
-    function stopRearCamera() {
-      if (frameInterval) clearInterval(frameInterval);
-      if (stream) stream.getTracks().forEach(t => t.stop());
-      video.srcObject = null;
-      stream = null;
-      statusText.textContent = "Camera Stream Stopped";
-      btnStream.textContent = "📹 Stream Live Frames to PC";
-      btnStream.classList.remove("btn-danger");
-      video.style.display = "none";
-      placeholderView.style.display = "flex";
-      scanEffect.style.display = "none";
-    }
-
-    const API_BASE = (typeof window !== 'undefined' && window.ENV_API_URL)
+    let API_BASE = (typeof window !== 'undefined' && window.ENV_API_URL)
+      || (localStorage.getItem('JARVIS_API_BASE'))
       || (window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1' 
           ? 'http://localhost:8001' 
           : window.location.origin);
+
+    if (inputApiUrl) inputApiUrl.value = API_BASE;
+    btnSaveApiUrl?.addEventListener('click', () => {
+      let val = inputApiUrl.value.trim().replace(/\/+$/, '');
+      if (val) {
+        localStorage.setItem('JARVIS_API_BASE', val);
+        API_BASE = val;
+        alert('PC Server URL saved: ' + val);
+        configBar.style.display = 'none';
+        statusText.textContent = 'PC Server URL Updated!';
+      }
+    });
+
+    function showConfigBar(msg) {
+      if (configBar) configBar.style.display = 'block';
+      statusText.textContent = msg || 'Error Uploading Photo to PC';
+    }
 
     async function sendFrameToPC() {
       if (!stream) return;
@@ -144,12 +142,36 @@
         const formData = new FormData();
         formData.append('file', blob, 'mobile_frame.jpg');
         try {
-          await fetch(`${API_BASE}/mobile/frame`, { method: 'POST', body: formData });
+          const res = await fetch(`${API_BASE}/mobile/frame`, { method: 'POST', body: formData });
+          if (!res.ok) {
+            showConfigBar('Server 404/405 - Verify PC Server URL');
+          }
         } catch (err) {
           console.error('Error streaming frame to PC:', err);
+          showConfigBar('Network Error - Check PC Server URL');
         }
       }, 'image/jpeg', 0.85);
     }
+
+    function startLiveStream() {
+      if (frameInterval) clearInterval(frameInterval);
+      frameInterval = setInterval(sendFrameToPC, 300);
+      btnStream.innerHTML = "⏹ Stop Streaming";
+      btnStream.classList.add("btn-accent");
+      scanEffect.style.display = "block";
+    }
+
+    btnStream.addEventListener("click", () => {
+      if (frameInterval) {
+        clearInterval(frameInterval);
+        frameInterval = null;
+        btnStream.innerHTML = "📹 Stream Live Frames to PC";
+        btnStream.classList.remove("btn-accent");
+        scanEffect.style.display = "none";
+      } else {
+        startLiveStream();
+      }
+    });
 
     // 2. Native Camera High-Res Photo Fallback (Works on 100% of HTTP mobile browsers)
     btnSnap.addEventListener('click', () => {
@@ -193,15 +215,15 @@
 
           try {
             const res = await fetch(`${API_BASE}/mobile/frame`, { method: 'POST', body: formData });
-            const data = await res.json();
-            if (data.status === 'received') {
+            const data = await res.json().catch(() => ({}));
+            if (res.ok && data.status === 'received') {
               statusText.textContent = '✓ Frame Uploaded! Tap Inspect on PC or Snap Another Photo.';
             } else {
-              statusText.textContent = 'Error Uploading Photo to PC';
+              showConfigBar('Server error - Set PC Server URL below');
             }
           } catch (err) {
             console.error('Upload error:', err);
-            statusText.textContent = 'Error Uploading Photo to PC';
+            showConfigBar('Network Error - Set PC Server URL below');
           }
         }, 'image/jpeg', 0.85);
       };
