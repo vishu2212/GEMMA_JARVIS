@@ -214,7 +214,38 @@ document.addEventListener('DOMContentLoaded', () => {
     traceToggleBtn.textContent = open ? '↑ Hide Reasoning Trace' : '↓ Show Reasoning Trace';
   });
 
-  /* ── Mobile Camera Poll (1.5s) ────────────────────────────── */
+  /* ── PC Circuit Photo Upload ─────────────────────────────── */
+  const btnUploadCircuitPc = document.getElementById('btn-upload-circuit-pc');
+  const pcCircuitUploadInput = document.getElementById('pc-circuit-upload-input');
+
+  btnUploadCircuitPc?.addEventListener('click', () => pcCircuitUploadInput?.click());
+
+  pcCircuitUploadInput?.addEventListener('change', async (e) => {
+    if (!e.target.files || !e.target.files[0]) return;
+    const file = e.target.files[0];
+    const formData = new FormData();
+    formData.append('file', file);
+
+    try {
+      const res = await fetch('/mobile/frame', { method: 'POST', body: formData });
+      const data = await res.json();
+      if (data.status === 'received') {
+        const localUrl = URL.createObjectURL(file);
+        mobileLiveFrame.src = localUrl;
+        mobileLiveFrame.style.display = 'block';
+        camEmpty.style.display = 'none';
+        camLiveBadge.style.display = 'flex';
+        camFrameBadge.style.display = 'block';
+        camFrameBadge.textContent = 'Uploaded just now';
+        statusPhone.textContent = 'Connected';
+        dotPhone.className = 'dot live';
+        badgeFrameAge.textContent = 'Live';
+        badgeFrameAge.className = 'badge badge-green';
+      }
+    } catch (err) {
+      console.error('Error uploading PC photo:', err);
+    }
+  });
   setInterval(async () => {
     try {
       const res = await fetch('/mobile/latest');

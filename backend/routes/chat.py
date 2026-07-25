@@ -466,14 +466,20 @@ async def get_mobile_latest():
     """Gets the current status of the Mobile AI Vision stream and latest diagnosis report."""
     now = time.time()
     last_age = int((now - mobile_vision_state["last_frame_timestamp"]) * 1000) if mobile_vision_state["last_frame_timestamp"] > 0 else -1
-    phone_online = last_age >= 0 and last_age < 30000
+    latest_img_path = settings.TEMP_DIR / "latest_frame.jpg"
+    phone_online = (last_age >= 0 and last_age < 30000) or latest_img_path.exists()
+
+    image_url = mobile_vision_state.get("latest_image_url", "")
+    if (not image_url or image_url == "") and latest_img_path.exists():
+        image_url = f"/temp/latest_frame.jpg?t={int(now*1000)}"
+        mobile_vision_state["latest_image_url"] = image_url
 
     return {
         "phone_connected": phone_online,
-        "last_frame_age_ms": last_age,
+        "last_frame_age_ms": last_age if last_age >= 0 else 0,
         "upload_latency_ms": mobile_vision_state["upload_latency_ms"],
         "frame_count": mobile_vision_state["frame_count"],
-        "latest_image_url": mobile_vision_state["latest_image_url"],
+        "latest_image_url": image_url,
         "latest_report": mobile_vision_state["latest_report"]
     }
 

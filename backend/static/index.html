@@ -79,10 +79,16 @@
           <div class="cam-empty" id="cam-empty">
             <div class="cam-empty-icon">📱</div>
             <div class="cam-empty-title">Connect Phone Camera</div>
-            <div class="cam-empty-sub">Open on your phone and tap<br>Start Live Camera Stream</div>
-            <button class="cam-qr-btn" id="btn-connect-phone">
-              <span>🔗</span> Pair Mobile Lens
-            </button>
+            <div class="cam-empty-sub">Stream live from your phone or upload a circuit photo</div>
+            <div style="display:flex;gap:8px;margin-top:4px;">
+              <button class="cam-qr-btn" id="btn-connect-phone">
+                <span>🔗</span> Pair Mobile Lens
+              </button>
+              <button class="cam-qr-btn" id="btn-upload-circuit-pc" style="background:var(--surface-2);border:1px solid var(--border-md);color:var(--text-1);">
+                <span>📁</span> Select Photo
+              </button>
+            </div>
+            <input type="file" id="pc-circuit-upload-input" accept="image/*" style="display:none;">
           </div>
 
           <!-- Live overlay badges -->
