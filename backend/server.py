@@ -86,5 +86,52 @@ async def serve_mobile():
         return FileResponse(mobile_file)
     return {"message": "Mobile Lens Page Not Found"}
 
+def generate_self_signed_cert():
+    cert_path = settings.BASE_DIR / "cert.pem"
+    key_path = settings.BASE_DIR / "key.pem"
+    if cert_path.exists() and key_path.exists():
+        return str(cert_path), str(key_path)
+    try:
+        from cryptography import x509
+        from cryptography.x509.oid import NameOID
+        from cryptography.hazmat.primitives import hashes, serialization
+        from cryptography.hazmat.primitives.asymmetric import rsa
+        import datetime
+
+        key = rsa.generate_private_key(public_exponent=65537, key_size=2048)
+        subject = issuer = x509.Name([x509.NameAttribute(NameOID.COMMON_NAME, u"JARVIS Edge AI")])
+        cert = x509.CertificateBuilder().subject_name(
+            subject
+        ).issuer_name(
+            issuer
+        ).public_key(
+            key.public_key()
+        ).serial_number(
+            x509.random_serial_number()
+        ).not_valid_before(
+            datetime.datetime.now(datetime.timezone.utc)
+        ).not_valid_after(
+            datetime.datetime.now(datetime.timezone.utc) + datetime.timedelta(days=365)
+        ).sign(key, hashes.SHA256())
+
+        with open(key_path, "wb") as f:
+            f.write(key.private_bytes(
+                encoding=serialization.Encoding.PEM,
+                format=serialization.PrivateFormat.TraditionalOpenSSL,
+                encryption_algorithm=serialization.NoEncryption()
+            ))
+        with open(cert_path, "wb") as f:
+            f.write(cert.public_bytes(serialization.Encoding.PEM))
+        logger.info("Generated self-signed HTTPS SSL certificate for mobile camera stream.")
+        return str(cert_path), str(key_path)
+    except Exception as e:
+        logger.error(f"Failed to generate SSL certificate: {e}")
+        return None, None
+
 if __name__ == "__main__":
-    uvicorn.run("server:app", host=settings.HOST, port=settings.PORT, reload=False)
+    cert_file, key_file = generate_self_signed_cert()
+    if cert_file and key_file:
+        logger.info("Starting HTTPS Server for Live Mobile Camera Streaming...")
+        uvicorn.run("server:app", host=settings.HOST, port=settings.PORT, ssl_certfile=cert_file, ssl_keyfile=key_file, reload=False)
+    else:
+        uvicorn.run("server:app", host=settings.HOST, port=settings.PORT, reload=False)
