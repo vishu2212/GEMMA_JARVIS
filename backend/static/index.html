@@ -155,7 +155,10 @@
         <h3>📱 Connect Smartphone Camera</h3>
         <button id="btn-close-modal" class="btn-close">✖</button>
       </div>
-      <p>Scan this link or open in your phone browser:</p>
+      <p>Scan this QR code using your phone camera:</p>
+      <div class="qr-code-wrap" style="margin: 0.8rem 0; display: flex; justify-content: center;">
+        <img id="qr-code-img" src="https://api.qrserver.com/v1/create-qr-code/?size=200x200&data=http://192.168.1.111:8001/mobile" alt="Mobile QR Code" style="width: 200px; height: 200px; border-radius: 12px; border: 2px solid #06b6d4; padding: 6px; background: white;" />
+      </div>
       <div class="url-display" id="mobile-url">http://192.168.1.111:8001/mobile</div>
       <div class="modal-footer">
         <a href="/mobile" target="_blank" class="btn btn-primary">Open Mobile AI Lens</a>

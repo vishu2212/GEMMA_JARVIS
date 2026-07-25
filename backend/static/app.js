@@ -41,7 +41,14 @@ document.addEventListener('DOMContentLoaded', () => {
 
   // 1. QR Modal Handler
   btnConnectPhone.addEventListener('click', () => {
-    mobileUrl.textContent = window.location.origin + '/mobile';
+    const hostIp = window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1' ? '192.168.1.111' : window.location.hostname;
+    const fullUrl = `http://${hostIp}:${window.location.port || '8001'}/mobile`;
+    mobileUrl.textContent = fullUrl;
+    
+    const qrImg = document.getElementById('qr-code-img');
+    if (qrImg) {
+      qrImg.src = `https://api.qrserver.com/v1/create-qr-code/?size=200x200&data=${encodeURIComponent(fullUrl)}`;
+    }
     qrModal.style.display = 'flex';
   });
 
