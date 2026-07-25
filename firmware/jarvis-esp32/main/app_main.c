@@ -17,6 +17,7 @@
 #include "speaker.h"
 #include "api.h"
 #include "app_state.h"
+#include "led.h"
 
 #ifndef M_PI
 #define M_PI 3.14159265358979323846
@@ -144,6 +145,19 @@ static void oled_print_wrapped_string(oled_display_t* dev, int page_start, const
 
 static void update_state(app_state_t new_state) {
     g_state = new_state;
+
+    /* ── RGB LED status indicator ─────────────────────────────
+       State           LED Colour   Meaning
+       APP_BOOT        White dim    Starting up
+       WIFI_CONNECT    Amber        Waiting for network
+       APP_IDLE        Green        Ready — say Hey JARVIS
+       APP_LISTENING   Blue         Microphone active
+       APP_PROCESSING  Yellow       Gemma 4 thinking
+       APP_SPEAKING    Purple       Piper TTS playing
+       APP_ERROR       Red          Something went wrong
+    ──────────────────────────────────────────────────────────── */
+    led_set_state(new_state);
+
     if (!display_device.initialized) return;
 
     // For static states, render immediately
@@ -459,6 +473,10 @@ void app_main(void)
     if (ret != ESP_OK) {
         ESP_LOGE(TAG, "NVS Flash Init Failed: %s", esp_err_to_name(ret));
     }
+
+    // 1b. Initialize RGB NeoPixel status LED (GPIO 48 on ESP32-S3-DevKit)
+    led_rgb_init(STATUS_LED_PIN);
+    led_set_state(APP_BOOT);   /* White: booting */
 
     // 2. Initialize OLED Display
     ret = oled_init(&display_device, OLED_SDA_GPIO, OLED_SCL_GPIO, OLED_I2C_ADDR);

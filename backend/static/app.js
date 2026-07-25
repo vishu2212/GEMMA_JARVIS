@@ -249,6 +249,7 @@ document.addEventListener('DOMContentLoaded', () => {
     resetPipeline();
     activateStep('ps-vision');
     btnAnalyzeNow.classList.add('dock-active');
+    if (window.setLedState) window.setLedState('thinking');
 
     try {
       // Vision step
@@ -260,12 +261,13 @@ document.addEventListener('DOMContentLoaded', () => {
 
       completeStep('ps-gemma', data.gemma_latency_ms ? `${(data.gemma_latency_ms/1000).toFixed(2)}s` : '2.10s');
       activateStep('ps-piper');
+      if (window.setLedState) window.setLedState('speaking');
 
       if (data.status === 'success') {
         updateReportCard(data);
         updateTimeline(data);
         setTimeout(() => { completeStep('ps-piper', data.tts_latency_ms ? `${(data.tts_latency_ms/1000).toFixed(2)}s` : '0.45s'); activateStep('ps-esp32'); }, 300);
-        setTimeout(() => { completeStep('ps-esp32', '100ms'); finishPipeline(); }, 800);
+        setTimeout(() => { completeStep('ps-esp32', '100ms'); finishPipeline(); if (window.setLedState) window.setLedState('ready'); }, 800);
 
         const tags = [];
         if (data.tool_call?.name) tags.push({ cls: 'tag-tool', icon: '🛠️', label: `${data.tool_call.name}()` });
@@ -346,6 +348,7 @@ document.addEventListener('DOMContentLoaded', () => {
     textInput.value = '';
     resetPipeline();
     activateStep('ps-gemma');
+    if (window.setLedState) window.setLedState('thinking');
 
     try {
       const res = await fetch('/chat/text', {
@@ -357,6 +360,7 @@ document.addEventListener('DOMContentLoaded', () => {
 
       completeStep('ps-gemma', data.latency?.llm_ms ? `${(data.latency.llm_ms/1000).toFixed(2)}s` : '—');
       activateStep('ps-piper');
+      if (window.setLedState) window.setLedState('speaking');
 
       if (data.latency) {
         tlGemma.textContent = `${(data.latency.llm_ms/1000).toFixed(2)}s`;
@@ -382,7 +386,7 @@ document.addEventListener('DOMContentLoaded', () => {
         const audio = new Audio(URL.createObjectURL(blob));
         audio.play();
         startWaveform(audio);
-        setTimeout(() => { completeStep('ps-esp32', '100ms'); finishPipeline(); }, 600);
+        setTimeout(() => { completeStep('ps-esp32', '100ms'); finishPipeline(); if (window.setLedState) window.setLedState('ready'); }, 600);
       }
     } catch (err) {
       finishPipeline();
@@ -442,6 +446,7 @@ document.addEventListener('DOMContentLoaded', () => {
         btnRecordMic.classList.add('active');
         btnVoiceDock.classList.add('dock-active');
         btnVoiceDock.innerHTML = '<span class="dock-icon">⏹</span> Stop';
+        if (window.setLedState) window.setLedState('listening');
       } catch (err) {
         alert('Microphone access denied: ' + err.message);
       }
@@ -583,5 +588,65 @@ document.addEventListener('DOMContentLoaded', () => {
     const el = document.getElementById(id);
     if (el) { el.style.width = '0%'; setTimeout(() => { el.style.width = `${pct}%`; }, 60); }
   }
+
+  /* ── LED Status Mirroring ──────────────────────────────────
+     Mirrors the physical ESP32 RGB LED state on the dashboard.
+     Colour map matches led.c exactly:
+       READY      → Green    #10B981
+       LISTENING  → Blue     #0050FF
+       THINKING   → Yellow   #F59E0B
+       SPEAKING   → Purple   #8B5CF6
+       ERROR      → Red      #EF4444
+       BOOT       → White    #FFFFFF
+  ───────────────────────────────────────────────────────────── */
+  const LED_STATES = {
+    ready:      { color: '#10B981', glow: 'rgba(16,185,129,0.35)',  emoji: '🟢', label: 'Ready',      sub: 'Waiting for voice input' },
+    listening:  { color: '#0050FF', glow: 'rgba(0,80,255,0.35)',    emoji: '🔵', label: 'Listening',  sub: 'Microphone active — say "Hey JARVIS"' },
+    thinking:   { color: '#F59E0B', glow: 'rgba(245,158,11,0.35)',  emoji: '🟡', label: 'Thinking',   sub: 'Gemma 4 is reasoning...' },
+    speaking:   { color: '#8B5CF6', glow: 'rgba(139,92,246,0.35)',  emoji: '🟣', label: 'Speaking',   sub: 'Piper TTS — ESP32 speaker active' },
+    error:      { color: '#EF4444', glow: 'rgba(239,68,68,0.35)',   emoji: '🔴', label: 'Error',      sub: 'Pipeline error — check logs' },
+    boot:       { color: '#FAFAFA', glow: 'rgba(250,250,250,0.2)',  emoji: '⚪', label: 'Booting',    sub: 'ESP32 initialising...' },
+  };
+
+  const ledRing      = document.getElementById('led-ring');
+  const ledInnerDot  = document.getElementById('led-inner-dot');
+  const ledBoardState= document.getElementById('led-board-state');
+  const ledBoardSub  = document.getElementById('led-board-sub');
+  const ledDot       = document.getElementById('led-dot');
+  const ledLabel     = document.getElementById('led-state-label');
+
+  function setLedState(stateKey) {
+    const s = LED_STATES[stateKey] || LED_STATES.ready;
+    if (ledRing) {
+      ledRing.style.borderColor  = s.color;
+      ledRing.style.boxShadow    = `0 0 18px ${s.glow}`;
+      ledRing.style.background   = s.glow.replace('0.35', '0.08');
+    }
+    if (ledInnerDot) {
+      ledInnerDot.style.background = s.color;
+      ledInnerDot.style.boxShadow  = `0 0 8px ${s.color}`;
+    }
+    if (ledBoardState) ledBoardState.textContent = `${s.emoji} ${s.label}`;
+    if (ledBoardSub)   ledBoardSub.textContent   = s.sub;
+    if (ledDot) {
+      ledDot.style.background = s.color;
+      ledDot.style.boxShadow  = `0 0 6px ${s.color}`;
+    }
+    if (ledLabel) ledLabel.textContent = s.label;
+  }
+
+  // Hook into pipeline state changes
+  const _origResetPipeline = resetPipeline;
+  const _origActivateStep  = activateStep;
+  const _origFinishPipeline = finishPipeline;
+
+  // Patch pipeline calls to also update LED UI
+  window._pipelineSetLed = setLedState;
+
+  // Initial state
+  setLedState('ready');
+
+  // Also expose so sendTextMessage / analyzeLatestMobileFrame can call it
+  window.setLedState = setLedState;
 
 });

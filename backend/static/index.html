@@ -44,6 +44,10 @@
       <div class="lat-pill">
         ⚡ <span id="nav-latency">2.71 s</span>
       </div>
+      <div class="s-pill" id="led-status-pill" title="Physical ESP32 RGB LED state">
+        <span class="dot" id="led-dot" style="background:var(--green);box-shadow:0 0 6px var(--green);"></span>
+        LED <strong id="led-state-label">Ready</strong>
+      </div>
     </div>
   </header>
 
@@ -322,6 +326,20 @@
               <div style="font-family:var(--mono);font-size:11px;color:var(--text-3);">1.85s</div>
             </div>
             <div style="height:2px;background:var(--surface-3);border-radius:2px;"><div style="height:100%;width:38%;background:rgba(255,255,255,0.08);border-radius:2px;"></div></div>
+          </div>
+        </div>
+
+        <!-- LED Status Card -->
+        <div style="background:var(--surface-1);border:1px solid var(--border);border-radius:var(--r-lg);overflow:hidden;flex-shrink:0;">
+          <div style="padding:10px 13px;border-bottom:1px solid var(--border);font-size:10px;font-weight:700;text-transform:uppercase;letter-spacing:0.08em;color:var(--text-3);">🔴 ESP32 LED Status</div>
+          <div style="padding:12px 14px;display:flex;align-items:center;gap:12px;">
+            <div id="led-ring" style="width:36px;height:36px;border-radius:50%;background:var(--green-10);border:2px solid var(--green);display:flex;align-items:center;justify-content:center;box-shadow:0 0 14px var(--green-20);transition:all 0.4s ease;">
+              <div id="led-inner-dot" style="width:14px;height:14px;border-radius:50%;background:var(--green);transition:all 0.4s ease;"></div>
+            </div>
+            <div>
+              <div id="led-board-state" style="font-size:14px;font-weight:700;color:var(--text-1);transition:color 0.4s;">🟢 Ready</div>
+              <div id="led-board-sub" style="font-size:10.5px;color:var(--text-3);margin-top:2px;">Waiting for voice input</div>
+            </div>
           </div>
         </div>
 
