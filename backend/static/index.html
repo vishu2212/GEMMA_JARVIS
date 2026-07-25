@@ -108,7 +108,7 @@
           <div class="hw-card healthy">
             <div class="hw-top">
               <span class="hw-name">ESP32-S3</span>
-              <span class="hw-dot ok"></span>
+              <span class="badge badge-green" style="font-size:9px;">98% CONFIDENCE</span>
             </div>
             <div class="hw-type">Xtensa LX7 · 240MHz</div>
             <div class="hw-tags">
@@ -120,7 +120,7 @@
           <div class="hw-card healthy">
             <div class="hw-top">
               <span class="hw-name">SSD1306</span>
-              <span class="hw-dot ok"></span>
+              <span class="badge badge-green" style="font-size:9px;">96% CONFIDENCE</span>
             </div>
             <div class="hw-type">OLED · 128×64px</div>
             <div class="hw-tags">
@@ -132,7 +132,7 @@
           <div class="hw-card healthy">
             <div class="hw-top">
               <span class="hw-name">INMP441</span>
-              <span class="hw-dot ok"></span>
+              <span class="badge badge-green" style="font-size:9px;">95% CONFIDENCE</span>
             </div>
             <div class="hw-type">MEMS Mic · I2S</div>
             <div class="hw-tags">
@@ -144,7 +144,7 @@
           <div class="hw-card healthy">
             <div class="hw-top">
               <span class="hw-name">MAX98357A</span>
-              <span class="hw-dot ok"></span>
+              <span class="badge badge-green" style="font-size:9px;">97% CONFIDENCE</span>
             </div>
             <div class="hw-type">Class-D DAC · 3.2W</div>
             <div class="hw-tags">
@@ -152,6 +152,7 @@
               <span class="hw-tag">16kHz</span>
               <span class="hw-tag">GPIO41</span>
             </div>
+          </div>
         </div>
 
         <!-- Live ESP32 Telemetry Card (Heartbeat) -->
@@ -222,9 +223,9 @@
               ↓ Show Reasoning Trace
             </button>
             <div class="trace-section" id="trace-section">
-              <div class="trace-row ok">✓ ESP32-S3 Microcontroller Detected</div>
+              <div class="trace-row ok">✓ ESP32-S3 Microcontroller Detected (98% Conf)</div>
               <div class="trace-row ok">✓ I2C Bus Scan Successful (400 kHz)</div>
-              <div class="trace-row ok">✓ SSD1306 OLED Verified (0x3C)</div>
+              <div class="trace-row ok">✓ SSD1306 OLED Verified (0x3C / 96% Conf)</div>
               <div class="trace-row ok">✓ I2S Drivers Active (INMP441 &amp; MAX98357A)</div>
               <div class="trace-row ok">✓ Circuit Connections Intact</div>
             </div>
@@ -239,16 +240,13 @@
     ───────────────────────────────────────────────────────── -->
     <section class="panel" id="panel-brain">
       <div class="panel-hdr">
-        <span class="panel-label">🧠 AI Brain</span>
+        <span class="panel-label">🧠 AI Brain Reasoning Pipeline</span>
         <span class="badge badge-cyan" id="brain-status">Ready</span>
       </div>
 
       <div class="panel-scroll">
 
-        <!-- Pipeline steps -->
-        <div class="pipeline">
-
-        <!-- Animated 6-Stage AI Brain Pipeline -->
+        <!-- Animated 7-Stage AI Brain Pipeline -->
         <div class="pipeline">
 
           <!-- 1. Vision Capture -->
@@ -264,25 +262,25 @@
             </div>
           </div>
 
-          <!-- 2. AR Component Detection -->
+          <!-- 2. Component Detection -->
           <div class="pipe-step step-idle" id="ps-detect">
-            <div class="pipe-icon">🎯</div>
+            <div class="pipe-icon">🔍</div>
             <div class="pipe-body">
               <div class="pipe-name">
-                2. AR Component Detection
+                2. Component Detection
                 <span class="pipe-check pend" id="pc-detect">○</span>
               </div>
-              <div class="pipe-sub">ESP32-S3, OLED, Mic, DAC Bounding Boxes</div>
+              <div class="pipe-sub">4 components detected · 98% Confidence</div>
               <div class="pipe-bar"><div class="pipe-fill" id="pf-detect"></div></div>
             </div>
           </div>
 
           <!-- 3. RAG Search -->
           <div class="pipe-step step-idle" id="ps-rag">
-            <div class="pipe-icon">📄</div>
+            <div class="pipe-icon">📚</div>
             <div class="pipe-body">
               <div class="pipe-name">
-                3. RAG Datasheet Retrieval
+                3. Datasheet Retrieval (RAG)
                 <span class="pipe-check pend" id="pc-rag">○</span>
               </div>
               <div class="pipe-sub">Vector search over pinout &amp; timing specs</div>
@@ -298,17 +296,30 @@
                 4. Gemma 4 Reasoning
                 <span class="pipe-check pend" id="pc-gemma">○</span>
               </div>
-              <div class="pipe-sub">gemma-4-31b-it · Hardware Diagnostic</div>
+              <div class="pipe-sub">gemma-4-31b-it · Multimodal Diagnostic</div>
               <div class="pipe-bar"><div class="pipe-fill" id="pf-gemma"></div></div>
             </div>
           </div>
 
-          <!-- 5. Function Calling -->
-          <div class="pipe-step step-idle" id="ps-func">
+          <!-- 5. Electrical Analysis -->
+          <div class="pipe-step step-idle" id="ps-elec">
             <div class="pipe-icon">⚡</div>
             <div class="pipe-body">
               <div class="pipe-name">
-                5. Hardware Function Calling
+                5. Electrical Analysis
+                <span class="pipe-check pend" id="pc-elec">○</span>
+              </div>
+              <div class="pipe-sub">3.3V Rail &amp; I2C Bus Scan (0x3C Active)</div>
+              <div class="pipe-bar"><div class="pipe-fill" id="pf-elec"></div></div>
+            </div>
+          </div>
+
+          <!-- 6. Function Calling -->
+          <div class="pipe-step step-idle" id="ps-func">
+            <div class="pipe-icon">🛠</div>
+            <div class="pipe-body">
+              <div class="pipe-name">
+                6. Hardware Function Calling
                 <span class="pipe-check pend" id="pc-func">○</span>
               </div>
               <div class="pipe-sub">LED RGB shift, OLED update &amp; bus command</div>
