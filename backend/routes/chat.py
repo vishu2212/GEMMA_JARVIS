@@ -20,6 +20,7 @@ from services.llm_service import LLMService
 from services.tts_service import TTSService
 from services.audio_service import AudioService
 from services.conversation_service import ConversationService
+from services.vision_service import VisionService
 
 router = APIRouter(tags=["Chat & Audio Services"])
 
@@ -37,6 +38,7 @@ llm_service = LLMService()
 tts_service = TTSService()
 audio_service = AudioService()
 conversation_service = ConversationService()
+vision_service = VisionService(llm_service, tts_service)
 
 # Initialize openwakeword model globally at module level to prevent connection-blocking latencies
 oww_model = None
@@ -354,6 +356,30 @@ async def post_vision_analyze(
     except Exception as e:
         logger.error(f"Error in /vision/analyze: {e}", exc_info=True)
         raise HTTPException(status_code=500, detail=f"Vision analysis failed: {str(e)}")
+
+
+class VisionStreamStartRequest(BaseModel):
+    stream_url: str = "http://192.168.1.100:8080/video"
+
+
+@router.post("/vision/stream/start")
+async def post_vision_stream_start(request: VisionStreamStartRequest):
+    """Starts live IP webcam / video camera stream inspection with Gemma 4 Vision."""
+    res = await vision_service.start_inspection(request.stream_url)
+    return res
+
+
+@router.post("/vision/stream/stop")
+async def post_vision_stream_stop():
+    """Stops live IP webcam stream inspection."""
+    res = await vision_service.stop_inspection()
+    return res
+
+
+@router.get("/vision/stream/status")
+async def get_vision_stream_status():
+    """Gets current status of live vision stream inspection."""
+    return vision_service.get_status()
 
 
 def get_resampled_pcm16_bytes(wav_path, target_sr=16000, volume_multiplier=1.0) -> bytes:
