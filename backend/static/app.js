@@ -308,6 +308,16 @@ document.addEventListener('DOMContentLoaded', () => {
 
     try {
       const res = await fetch('/vision/analyze_latest', { method: 'POST' });
+      if (!res.ok) {
+        const errJson = await res.json().catch(() => ({}));
+        const msg = errJson.detail || 'No camera frame captured yet. Tap "📸 Snap High-Res Photo" on your phone camera lens page first!';
+        addMessage('JARVIS', `📱 <strong>Camera Frame Required:</strong> ${msg}`, 'system');
+        finishPipeline();
+        btnAnalyzeNow.innerHTML = '<span class="dock-icon">📷</span> Inspect';
+        if (window.setLedState) window.setLedState('ready');
+        openQrModal();
+        return;
+      }
       const data = await res.json();
 
       setPipeFill('pf-gemma', 100);
