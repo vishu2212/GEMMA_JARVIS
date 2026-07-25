@@ -635,3 +635,55 @@ body {
   font-family: 'JetBrains Mono', monospace;
   margin-top: 0.35rem;
 }
+
+/* Persistent Memory & Developer Profile Card */
+.memory-card {
+  background: rgba(2, 6, 23, 0.7);
+  border: 1px solid rgba(236, 72, 153, 0.25);
+  border-radius: 12px;
+  padding: 0.75rem 1rem;
+  display: flex;
+  flex-direction: column;
+  gap: 0.5rem;
+}
+
+.memory-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+}
+
+.memory-header h3 {
+  font-size: 0.88rem;
+  font-weight: 700;
+  color: #ec4899;
+}
+
+.memory-status-tag {
+  background: rgba(236, 72, 153, 0.15);
+  color: #ec4899;
+  padding: 0.15rem 0.5rem;
+  border-radius: 10px;
+  font-size: 0.72rem;
+  font-weight: 600;
+}
+
+.memory-chips-grid {
+  display: flex;
+  gap: 0.4rem;
+  flex-wrap: wrap;
+}
+
+.mem-chip {
+  background: rgba(236, 72, 153, 0.1);
+  border: 1px solid rgba(236, 72, 153, 0.3);
+  color: var(--text-main);
+  padding: 0.2rem 0.55rem;
+  border-radius: 6px;
+  font-size: 0.75rem;
+  font-family: 'JetBrains Mono', monospace;
+}
+
+.mem-chip strong {
+  color: #f472b6;
+}

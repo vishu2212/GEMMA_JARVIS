@@ -3,12 +3,15 @@ from config import settings
 from utils.logger import logger
 from utils.document_parser import compile_knowledge_documents
 
+from services.memory_service import MemoryService
+
 class ConversationService:
     """Service to manage conversation memory and history buffers per session."""
     
     def __init__(self) -> None:
         self.histories: Dict[str, List[Dict[str, str]]] = {}
         self.limit = settings.CONVERSATION_HISTORY_LIMIT
+        self.memory_service = MemoryService()
         
         # 1. Compile knowledge documents (PDFs, DOCX, TXT, MD) from folder
         compile_knowledge_documents(settings.KNOWLEDGE_DOCS_DIR, settings.COMPILED_KNOWLEDGE_PATH)
@@ -77,9 +80,13 @@ class ConversationService:
         return "\n".join(relevant_lines)
 
     def get_system_prompt(self, query: str) -> str:
-        """Constructs a compact system prompt dynamically tailored to the user's query."""
+        """Constructs a compact system prompt dynamically tailored to the user's query and long-term profile."""
         prompt = self.base_system_prompt
         
+        memory_prompt = self.memory_service.get_memory_prompt()
+        if memory_prompt:
+            prompt += f"\n\n{memory_prompt}"
+
         if self.assistant_knowledge:
             prompt += f"\n\nAssistant Knowledge:\n{self.assistant_knowledge}"
             

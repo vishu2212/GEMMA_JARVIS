@@ -300,6 +300,9 @@ async def post_chat_text(request: ChatTextRequest):
     """Processes text chat input -> checks tool calls -> queries RAG -> queries Gemma -> returns response."""
     start_total = time.perf_counter()
     try:
+        # Auto extract user preferences to long-term memory
+        conversation_service.memory_service.auto_extract_preferences(request.text)
+
         # Check Function Calling tool execution
         tool_name, tool_result, prompt_aug = function_calling_service.detect_and_execute(request.text)
         tool_call_meta = {"name": tool_name, "result": tool_result} if tool_name else None
@@ -864,4 +867,22 @@ async def post_tools_execute(request: ToolExecuteRequest):
     
     result = func_map[request.tool_name]()
     return {"status": "success", "tool_name": request.tool_name, "result": result}
+
+
+class MemoryUpdateRequest(BaseModel):
+    key: str
+    value: str
+
+@router.get("/memory")
+async def get_user_memory():
+    """Returns long-term user memory profile."""
+    memory_data = conversation_service.memory_service.memory
+    return {"status": "success", "memory": memory_data}
+
+
+@router.post("/memory/update")
+async def post_memory_update(request: MemoryUpdateRequest):
+    """Updates or adds a key-value pair in long-term memory."""
+    updated = conversation_service.memory_service.update_key(request.key, request.value)
+    return {"status": "success", "memory": updated}
 

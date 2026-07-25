@@ -356,6 +356,24 @@ document.addEventListener('DOMContentLoaded', () => {
     });
   });
 
+  // 9. Persistent Developer Memory Profile Loader
+  const memoryChipsGrid = document.getElementById('memory-chips-grid');
+
+  async function fetchUserMemory() {
+    try {
+      const res = await fetch('/memory');
+      if (res.ok) {
+        const data = await res.json();
+        if (data.memory && memoryChipsGrid) {
+          memoryChipsGrid.innerHTML = Object.entries(data.memory)
+            .map(([k, v]) => `<span class="mem-chip">${k.replace('_', ' ').toUpperCase()}: <strong>${v}</strong></span>`)
+            .join('');
+        }
+      }
+    } catch (e) {}
+  }
+  fetchUserMemory();
+
   // Volume Slider
   volSlider.addEventListener('input', (e) => {
     volVal.textContent = e.target.value + '%';

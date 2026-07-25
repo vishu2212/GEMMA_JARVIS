@@ -1,0 +1,8 @@
+{
+  "board": "ESP32-S3 DevKitC-1",
+  "microphone": "INMP441 MEMS (I2S)",
+  "speaker_dac": "MAX98357A Class-D (I2S)",
+  "oled_display": "SSD1306 128x64 (I2C 0x3C)",
+  "code_preference": "C / ESP-IDF v5",
+  "speech_voice": "Piper Neural Lessac"
+}
