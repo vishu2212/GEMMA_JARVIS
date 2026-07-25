@@ -320,18 +320,32 @@ class VisionAnalysisResponse(BaseModel):
     latency_ms: int
 
 
+latest_vision_result = {
+    "analysis": "No vision analysis yet.",
+    "audio_url": None,
+    "image_url": "/temp/latest_frame.jpg",
+    "timestamp": 0
+}
+
+
 @router.post("/vision/analyze", response_model=VisionAnalysisResponse)
 async def post_vision_analyze(
     file: UploadFile = File(...),
     prompt: Optional[str] = Form(None),
     session_id: str = Form("default")
 ):
-    """Uploads a hardware/circuit image and analyzes it using Gemma 4 Multimodal Vision."""
+    """Uploads a hardware/circuit image and analyzes it using Gemma 4 Multimodal Vision on the PC."""
+    global latest_vision_result
     start_time = time.perf_counter()
-    logger.info(f"Received circuit vision analysis request (File: {file.filename})")
+    logger.info(f"Received circuit vision analysis request on PC (File: {file.filename})")
     try:
         image_bytes = await file.read()
         image = Image.open(io.BytesIO(image_bytes))
+        
+        # Save image to temp directory so PC dashboard can view the frame sent from phone
+        latest_img_path = settings.TEMP_DIR / "latest_frame.jpg"
+        with open(latest_img_path, "wb") as f:
+            f.write(image_bytes)
         
         user_prompt = prompt or "JARVIS, what's wrong with my circuit?"
         analysis_text = await llm_service.analyze_circuit_image(image, user_prompt)
@@ -346,6 +360,14 @@ async def post_vision_analyze(
         
         total_ms = int((time.perf_counter() - start_time) * 1000)
         
+        latest_vision_result = {
+            "analysis": analysis_text,
+            "audio_url": audio_url,
+            "image_url": f"/temp/latest_frame.jpg?t={int(time.time()*1000)}",
+            "timestamp": time.time(),
+            "latency_ms": total_ms
+        }
+        
         return VisionAnalysisResponse(
             status="success",
             prompt=user_prompt,
@@ -356,6 +378,12 @@ async def post_vision_analyze(
     except Exception as e:
         logger.error(f"Error in /vision/analyze: {e}", exc_info=True)
         raise HTTPException(status_code=500, detail=f"Vision analysis failed: {str(e)}")
+
+
+@router.get("/vision/latest")
+async def get_vision_latest():
+    """Gets the latest vision analysis result and image frame captured from phone/webcam."""
+    return latest_vision_result
 
 
 class VisionStreamStartRequest(BaseModel):

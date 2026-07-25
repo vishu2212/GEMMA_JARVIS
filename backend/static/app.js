@@ -282,6 +282,43 @@ document.addEventListener('DOMContentLoaded', () => {
     volVal.textContent = e.target.value + '%';
   });
 
+  // Polling for latest phone camera snapshot / frame sent to PC
+  let lastSeenVisionTimestamp = 0;
+  setInterval(async () => {
+    try {
+      const res = await fetch('/vision/latest');
+      if (res.ok) {
+        const data = await res.json();
+        if (data.timestamp && data.timestamp > lastSeenVisionTimestamp) {
+          lastSeenVisionTimestamp = data.timestamp;
+          
+          // Update PC Hero Image
+          const heroImg = document.getElementById('hero-frame-img');
+          if (heroImg && data.image_url) {
+            heroImg.src = data.image_url;
+            heroImg.style.display = 'block';
+            cameraFeed.style.display = 'none';
+            videoOverlay.style.display = 'none';
+          }
+
+          // Update Health Report & Overlays
+          diagnosisBox.innerHTML = `<p>${data.analysis}</p>`;
+          addChatMessage('Phone Vision -> Gemma 4', data.analysis, 'bot-msg');
+
+          if (data.analysis.toLowerCase().includes('missing') || data.analysis.toLowerCase().includes('disconnect') || data.analysis.toLowerCase().includes('warning')) {
+            overlayWarning.style.display = 'flex';
+            document.getElementById('wire-detail').textContent = '⚠ Warning Detected';
+          } else {
+            overlayWarning.style.display = 'none';
+            document.getElementById('wire-detail').textContent = 'All Connections Good';
+          }
+        }
+      }
+    } catch (e) {
+      // silent catch for poll
+    }
+  }, 2000);
+
   // Helper Utilities
   function addChatMessage(sender, text, msgClass) {
     const msgDiv = document.createElement('div');
