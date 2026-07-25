@@ -6,6 +6,17 @@
 
 document.addEventListener('DOMContentLoaded', () => {
 
+  /* ── Backend API & WebSocket Configuration ────────────────── */
+  const API_BASE = (typeof window !== 'undefined' && window.ENV_API_URL)
+    || (typeof process !== 'undefined' && (process.env?.REACT_APP_API_URL || process.env?.VITE_API_URL))
+    || (window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1' 
+        ? 'http://localhost:8001' 
+        : window.location.origin);
+
+  const WS_BASE = API_BASE
+    .replace(/^http:/, 'ws:')
+    .replace(/^https:/, 'wss:');
+
   /* ── DOM Refs ─────────────────────────────────────────────── */
   const mobileLiveFrame   = document.getElementById('mobile-live-frame');
   const camEmpty          = document.getElementById('cam-empty');
@@ -169,11 +180,7 @@ document.addEventListener('DOMContentLoaded', () => {
 
   /* ── QR Modal ─────────────────────────────────────────────── */
   function openQrModal() {
-    const isLocal = (window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1');
-    const portStr = window.location.port ? `:${window.location.port}` : '';
-    const fullUrl = isLocal 
-      ? `http://192.168.1.111${portStr || ':8001'}/mobile` 
-      : `${window.location.protocol}//${window.location.host}/mobile`;
+    const fullUrl = `${API_BASE}/mobile`;
       
     if (mobileUrl) {
       mobileUrl.innerHTML = `<a href="${fullUrl}" target="_blank" style="color:var(--cyan);text-decoration:none;font-weight:700;">${fullUrl}</a>`;
@@ -227,7 +234,7 @@ document.addEventListener('DOMContentLoaded', () => {
     formData.append('file', file);
 
     try {
-      const res = await fetch('/mobile/frame', { method: 'POST', body: formData });
+      const res = await fetch(`${API_BASE}/mobile/frame`, { method: 'POST', body: formData });
       const data = await res.json();
       if (data.status === 'received') {
         const localUrl = URL.createObjectURL(file);
@@ -295,7 +302,7 @@ document.addEventListener('DOMContentLoaded', () => {
           if (!blob) return;
           const fd = new FormData();
           fd.append('file', blob, 'webcam_frame.jpg');
-          fetch('/mobile/frame', { method: 'POST', body: fd }).catch(() => {});
+          fetch(`${API_BASE}/mobile/frame`, { method: 'POST', body: fd }).catch(() => {});
         }, 'image/jpeg', 0.85);
       }, 500);
 
@@ -364,7 +371,7 @@ document.addEventListener('DOMContentLoaded', () => {
   /* ── Metadata Polling (1s) ─────────── */
   setInterval(async () => {
     try {
-      const res = await fetch('/mobile/latest');
+      const res = await fetch(`${API_BASE}/mobile/latest`);
       if (!res.ok) return;
       const data = await res.json();
 
@@ -446,7 +453,7 @@ document.addEventListener('DOMContentLoaded', () => {
     }, 900);
 
     try {
-      const res = await fetch('/vision/analyze_latest', { method: 'POST' });
+      const res = await fetch(`${API_BASE}/vision/analyze_latest`, { method: 'POST' });
       if (!res.ok) {
         const errJson = await res.json().catch(() => ({}));
         const msg = errJson.detail || 'No camera frame captured yet. Tap "📸 Snap High-Res Photo" on your phone camera lens page first!';
@@ -617,7 +624,7 @@ document.addEventListener('DOMContentLoaded', () => {
     if (window.setLedState) window.setLedState('thinking');
 
     try {
-      const res = await fetch('/chat/text', {
+      const res = await fetch(`${API_BASE}/chat/text`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ text })
@@ -640,7 +647,7 @@ document.addEventListener('DOMContentLoaded', () => {
       addMessage('JARVIS', data.response, 'jarvis', tags);
 
       // TTS
-      const speakRes = await fetch('/speak', {
+      const speakRes = await fetch(`${API_BASE}/speak`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ text: data.response })
@@ -680,7 +687,7 @@ document.addEventListener('DOMContentLoaded', () => {
           const formData = new FormData();
           formData.append('audio', blob, 'mic_input.wav');
           try {
-            const res = await fetch('/chat/voice', { method: 'POST', body: formData });
+            const res = await fetch(`${API_BASE}/chat/voice`, { method: 'POST', body: formData });
             const data = await res.json();
             completeStep('ps-vision', '420ms');
             activateStep('ps-gemma');
@@ -733,7 +740,7 @@ document.addEventListener('DOMContentLoaded', () => {
     ledIndicator.classList.toggle('on', isLedOn);
     if (ledStatusBadge) { ledStatusBadge.style.display = isLedOn ? 'inline-flex' : 'none'; ledStatusBadge.textContent = isLedOn ? 'ON' : 'OFF'; }
     try {
-      const res = await fetch('/device/control', {
+      const res = await fetch(`${API_BASE}/device/control`, {
         method: 'POST', headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ action: isLedOn ? 'led_on' : 'led_off' })
       });
@@ -748,7 +755,7 @@ document.addEventListener('DOMContentLoaded', () => {
   async function sendOled(text) {
     if (!text) return;
     try {
-      const res = await fetch('/device/control', {
+      const res = await fetch(`${API_BASE}/device/control`, {
         method: 'POST', headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ action: 'update_oled', text })
       });
@@ -774,7 +781,7 @@ document.addEventListener('DOMContentLoaded', () => {
     const formData = new FormData();
     formData.append('file', file);
     try {
-      const res = await fetch('/docs/upload', { method: 'POST', body: formData });
+      const res = await fetch(`${API_BASE}/docs/upload`, { method: 'POST', body: formData });
       const data = await res.json();
       if (data.status === 'success') {
         addMessage('SYSTEM', `📄 <strong>${file.name}</strong> indexed into RAG memory.`, 'system');
@@ -790,7 +797,7 @@ document.addEventListener('DOMContentLoaded', () => {
   /* ── System Metrics & Telemetry Poll (1.5s) ───────────────── */
   setInterval(async () => {
     try {
-      const res = await fetch('/system/metrics');
+      const res = await fetch(`${API_BASE}/system/metrics`);
       if (!res.ok) return;
       const data = await res.json();
       if (bmRam)   bmRam.textContent   = `${data.ram_free_gb}GB`;
@@ -831,7 +838,7 @@ document.addEventListener('DOMContentLoaded', () => {
     addMessage('YOU', '⚡ Trigger Subsystem Self Diagnostics', 'user');
 
     try {
-      const res = await fetch('/device/self_test', { method: 'POST' });
+      const res = await fetch(`${API_BASE}/device/self_test`, { method: 'POST' });
       const data = await res.json();
       if (data.status === 'success') {
         const diag = data.diagnostic_results || {};
