@@ -1,0 +1,16 @@
+ROBOTICS MOTOR DRIVERS, PCA9685 PWM & ENCODER GUIDE
+
+1. PCA9685 16-CHANNEL 12-BIT PWM SERVO DRIVER
+- Communication: I2C Interface (Default Address 0x40)
+- PWM Resolution: 12-bit (4096 steps per cycle)
+- Standard Servo Control: Set PWM frequency to 50 Hz (20ms period). Pulse width of 1.0ms (count ~204) corresponds to 0 degrees; 1.5ms (count ~307) to 90 degrees; 2.0ms (count ~410) to 180 degrees.
+- Power Connection: Connect VCC to 3.3V/5V logic rail, V+ to external 5V-6V servo power supply (do not power servos from microcontroller 3.3V regulator!).
+
+2. L298N & TB6612FNG DUAL H-BRIDGE MOTOR DRIVERS
+- TB6612FNG (Recommended): Higher efficiency MOSFET H-bridge (1.2A continuous per channel, 3.2A peak). Pins: VM (Motor power 4.5-13.5V), VCC (Logic 3.3V), PWMA/PWMB (PWM speed), AIN1/AIN2 (Direction control), STBY (Standby, pull HIGH to enable).
+- L298N: Bipolar junction transistor driver (2A per channel). Note 2V internal drop causing heat. Require common GND with ESP32.
+
+3. QUADRATURE ENCODERS FOR CLOSED-LOOP SPEED CONTROL
+Optical or magnetic encoders output Phase A and Phase B square waves offset by 90 degrees.
+- Direction Detection: Sample Phase B on rising edge of Phase A. If B is LOW, motor is turning clockwise; if B is HIGH, motor is turning counter-clockwise.
+- ESP32 PCNT (Pulse Counter Unit): Use hardware pulse counters to count encoder ticks in hardware without CPU overhead.

@@ -1,0 +1,15 @@
+ESP-IDF V5.X EMBEDDED SYSTEMS TECHNICAL REFERENCE & FREERTOS GUIDE
+
+1. ESP-IDF FREERTOS MULTI-TASKING ARCHITECTURE
+The ESP32-S3 contains two Xtensa LX7 CPU cores: Core 0 (PRO_CPU) and Core 1 (APP_CPU).
+- xTaskCreatePinnedToCore: Used to pin high-priority audio tasks (e.g. I2S microphone sampling) to Core 1 at priority 5.
+- xQueueCreate & vTaskDelay: Always use FreeRTOS queues for inter-task communication and call vTaskDelay(pdMS_TO_TICKS(10)) to yield control to the Task Watchdog Timer (TWDT).
+
+2. GPIO MATRIX & INTERRUPT HANDLING
+The ESP32-S3 GPIO Matrix allows routing any internal peripheral signal (UART, SPI, I2C, I2S, PWM) to any physical pin.
+- gpio_config_t: Configures pin mode (GPIO_MODE_INPUT, GPIO_MODE_OUTPUT), pull-up (GPIO_PULLUP_ENABLE), pull-down, and interrupt trigger type (GPIO_INTR_NEGEDGE).
+- gpio_install_isr_service: Registers per-pin ISR handlers for hardware interrupts.
+
+3. DMA BUFFER ALLOCATION FOR I2S AUDIO
+- i2s_chan_config_t: Set dma_desc_num = 8 and dma_frame_num = 512 for smooth I2S audio playback without buffer underruns.
+- MALLOC_CAP_DMA: Always allocate raw audio PCM buffers using heap_caps_malloc(size, MALLOC_CAP_DMA) to guarantee DMA controller accessibility.

@@ -1,0 +1,19 @@
+ARDUINO ESP32 & ESP32-S3 CORE HARDWARE PINOUT & LIBRARY GUIDE
+
+1. ARDUINO ESP32 PINOUT MAPPING
+- I2C Default Pins: SDA = GPIO 21 (ESP32) / GPIO 8 (ESP32-S3), SCL = GPIO 22 (ESP32) / GPIO 9 (ESP32-S3)
+- SPI Default Pins: MOSI = GPIO 23, MISO = GPIO 19, SCK = GPIO 18, CS = GPIO 5
+- Hardware Serial (UART): Serial0 (USB), Serial1 (RX=GPIO 9, TX=GPIO 10), Serial2 (RX=GPIO 16, TX=GPIO 17)
+
+2. I2C WIRE LIBRARY USAGE
+```cpp
+#include <Wire.h>
+void setup() {
+  Wire.begin(8, 9); // SDA=GPIO 8, SCL=GPIO 9 on ESP32-S3
+  Wire.setClock(400000); // 400kHz Fast I2C mode
+}
+```
+
+3. ANALOG TO DIGITAL CONVERTER (ADC) & PWM (LEDC)
+- ADC Pins: ADC1 (GPIO 1 to 10) can be read safely while Wi-Fi is active. ADC2 pins cannot be used when Wi-Fi is transmitting.
+- LEDC PWM Output: AnalogWrite is mapped to LEDC channels (up to 16 channels, 13-bit resolution at 5 kHz).

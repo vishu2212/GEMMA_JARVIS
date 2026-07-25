@@ -1,0 +1,20 @@
+EMBEDDED SENSOR GUIDES: MPU6050, BME280, VL53L0X & OLED
+
+1. MPU6050 6-AXIS IMU (GYROSCOPE + ACCELEROMETER)
+- Bus: I2C (Address 0x68 when AD0 is GND, 0x69 when AD0 is VCC)
+- Accelerometer Ranges: +/-2g, +/-4g, +/-8g, +/-16g
+- Gyroscope Ranges: +/-250 deg/s, +/-500 deg/s, +/-1000 deg/s, +/-2000 deg/s
+- Complementary Filter: Angle = 0.98 * (Angle + Gyro * dt) + 0.02 * AccelAngle
+
+2. BME280 ENVIRONMENTAL SENSOR (TEMP, HUMIDITY, PRESSURE)
+- Bus: I2C (Address 0x76 or 0x77) or SPI
+- Operating Voltage: 1.8V to 3.6V (Use 3.3V rail)
+- Measures barometric pressure to calculate altitude above sea level.
+
+3. VL53L0X TOF LIDAR DISTANCE SENSOR
+- Range: 30 mm to 2000 mm (2 meters) using 940nm laser pulses
+- Bus: I2C (Address 0x29). Change address dynamically via XSHUT shutdown pin for multi-sensor arrays.
+
+4. SSD1306 0.96" OLED DISPLAY
+- Bus: I2C (Address 0x3C or 0x3D)
+- Resolution: 128x64 pixels monochrome graphic display.

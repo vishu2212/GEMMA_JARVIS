@@ -396,9 +396,15 @@ document.addEventListener('DOMContentLoaded', () => {
     chatMessages.scrollTop = chatMessages.scrollHeight;
   }
 
-  function setPipelineStage(stageId) {
+  function setPipelineStage(stageId, timingText = null) {
     document.querySelectorAll('.pipe-step').forEach(el => el.classList.remove('active'));
     const target = document.getElementById(stageId);
-    if (target) target.classList.add('active');
+    if (target) {
+      target.classList.add('active');
+      if (timingText) {
+        const timeEl = target.querySelector('.pipe-time');
+        if (timeEl) timeEl.textContent = `(${timingText})`;
+      }
+    }
   }
 });

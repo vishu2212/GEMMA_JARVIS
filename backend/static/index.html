@@ -31,19 +31,19 @@
       </div>
     </header>
 
-    <!-- Full Pipeline Tracker -->
+    <!-- Full Pipeline Tracker with Live Timing Counters -->
     <div class="full-pipeline-tracker">
-      <div class="pipe-step" id="pipe-phone"><span class="icon">📱</span> Phone Lens</div>
+      <div class="pipe-step" id="pipe-phone"><span class="icon">📱</span> Phone Lens <span class="pipe-time" id="time-phone"></span></div>
       <div class="pipe-arrow">➜</div>
-      <div class="pipe-step" id="pipe-fastapi"><span class="icon">⚡</span> FastAPI Backend</div>
+      <div class="pipe-step" id="pipe-fastapi"><span class="icon">⚡</span> FastAPI <span class="pipe-time" id="time-fastapi"></span></div>
       <div class="pipe-arrow">➜</div>
-      <div class="pipe-step" id="pipe-gemma"><span class="icon">🧠</span> Gemma 4 Vision</div>
+      <div class="pipe-step" id="pipe-gemma"><span class="icon">🧠</span> Gemma 4 <span class="pipe-time" id="time-gemma"></span></div>
       <div class="pipe-arrow">➜</div>
-      <div class="pipe-step" id="pipe-reasoning"><span class="icon">🔍</span> Circuit Diagnosis</div>
+      <div class="pipe-step" id="pipe-reasoning"><span class="icon">🔍</span> Diagnosis <span class="pipe-time" id="time-reasoning"></span></div>
       <div class="pipe-arrow">➜</div>
-      <div class="pipe-step" id="pipe-tts"><span class="icon">🎙️</span> Piper Neural TTS</div>
+      <div class="pipe-step" id="pipe-tts"><span class="icon">🎙️</span> Piper TTS <span class="pipe-time" id="time-tts"></span></div>
       <div class="pipe-arrow">➜</div>
-      <div class="pipe-step" id="pipe-esp32"><span class="icon">🔊</span> ESP32 Speaker</div>
+      <div class="pipe-step" id="pipe-esp32"><span class="icon">🔊</span> ESP32 Speaker <span class="pipe-time" id="time-esp32"></span></div>
     </div>
 
     <!-- Main Grid Layout -->
@@ -144,6 +144,20 @@
           <input type="text" id="text-input" placeholder="Ask JARVIS an engineering question or debugging steps..." autocomplete="off">
           <button id="btn-send-text" class="btn btn-primary">Send</button>
           <button id="btn-record-mic" class="btn btn-danger">🎤 Mic</button>
+        </div>
+
+        <!-- Local Engineering Knowledge Base Card -->
+        <div class="kb-card">
+          <div class="kb-header">
+            <h3>📚 Local Engineering Knowledge Base</h3>
+            <span class="kb-status-tag">4 Guides Loaded</span>
+          </div>
+          <div class="kb-chips-grid">
+            <span class="kb-chip">⚙️ ESP-IDF v5 Reference</span>
+            <span class="kb-chip">⚡ Arduino ESP32 Pinouts</span>
+            <span class="kb-chip">🤖 Robotics Motor Drivers</span>
+            <span class="kb-chip">📡 Sensor I2C/SPI Guides</span>
+          </div>
         </div>
 
         <!-- Document-Aware Engineering Assistant (RAG Datasheets) -->
