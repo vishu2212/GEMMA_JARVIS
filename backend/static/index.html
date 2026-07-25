@@ -72,15 +72,19 @@
 
         <!-- Camera Feed -->
         <div class="cam-box">
+          <video id="pc-webcam-video" autoplay playsinline muted style="display:none;width:100%;height:100%;object-fit:cover;"></video>
           <img id="mobile-live-frame" alt="Live camera feed" />
           <canvas id="ar-detection-canvas"></canvas>
 
           <!-- Empty state -->
           <div class="cam-empty" id="cam-empty">
-            <div class="cam-empty-icon">📱</div>
-            <div class="cam-empty-title">Connect Phone Camera</div>
-            <div class="cam-empty-sub">Stream live from your phone or upload a circuit photo</div>
-            <div style="display:flex;gap:8px;margin-top:4px;">
+            <div class="cam-empty-icon">📷</div>
+            <div class="cam-empty-title">Circuit Vision Feed</div>
+            <div class="cam-empty-sub">Start live webcam stream, pair mobile lens, or pick a photo</div>
+            <div style="display:flex;flex-wrap:wrap;gap:8px;justify-content:center;margin-top:4px;">
+              <button class="cam-qr-btn" id="btn-start-pc-webcam" style="background:var(--cyan);color:#09090B;font-weight:700;">
+                <span>🎥</span> Start PC Webcam
+              </button>
               <button class="cam-qr-btn" id="btn-connect-phone">
                 <span>🔗</span> Pair Mobile Lens
               </button>

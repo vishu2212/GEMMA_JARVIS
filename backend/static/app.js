@@ -242,8 +242,62 @@ document.addEventListener('DOMContentLoaded', () => {
         badgeFrameAge.textContent = 'Live';
         badgeFrameAge.className = 'badge badge-green';
       }
+  /* ── Direct PC Webcam Stream ─────────────────────────────── */
+  const pcWebcamVideo = document.getElementById('pc-webcam-video');
+  const btnStartPcWebcam = document.getElementById('btn-start-pc-webcam');
+  let pcWebcamStream = null;
+
+  btnStartPcWebcam?.addEventListener('click', async () => {
+    try {
+      if (pcWebcamStream) {
+        pcWebcamStream.getTracks().forEach(t => t.stop());
+        pcWebcamStream = null;
+        pcWebcamVideo.style.display = 'none';
+        btnStartPcWebcam.innerHTML = '<span>🎥</span> Start PC Webcam';
+        camEmpty.style.display = 'flex';
+        return;
+      }
+
+      pcWebcamStream = await navigator.mediaDevices.getUserMedia({
+        video: { width: { ideal: 1280 }, height: { ideal: 720 } },
+        audio: false
+      });
+      pcWebcamVideo.srcObject = pcWebcamStream;
+      pcWebcamVideo.style.display = 'block';
+      mobileLiveFrame.style.display = 'none';
+      camEmpty.style.display = 'none';
+      camLiveBadge.style.display = 'flex';
+      camFrameBadge.style.display = 'block';
+      camFrameBadge.textContent = 'PC Webcam Live (30 FPS)';
+      statusPhone.textContent = 'Webcam Active';
+      dotPhone.className = 'dot live';
+      badgeFrameAge.textContent = 'Live (30 FPS)';
+      badgeFrameAge.className = 'badge badge-green';
+
+      btnStartPcWebcam.innerHTML = '<span>🛑</span> Stop PC Webcam';
+
+      // Automatically post frames to backend every 500ms
+      const hiddenCanvas = document.createElement('canvas');
+      const hiddenCtx = hiddenCanvas.getContext('2d');
+      const webcamInterval = setInterval(() => {
+        if (!pcWebcamStream) {
+          clearInterval(webcamInterval);
+          return;
+        }
+        hiddenCanvas.width = pcWebcamVideo.videoWidth || 640;
+        hiddenCanvas.height = pcWebcamVideo.videoHeight || 480;
+        hiddenCtx.drawImage(pcWebcamVideo, 0, 0, hiddenCanvas.width, hiddenCanvas.height);
+        hiddenCanvas.toBlob(blob => {
+          if (!blob) return;
+          const fd = new FormData();
+          fd.append('file', blob, 'webcam_frame.jpg');
+          fetch('/mobile/frame', { method: 'POST', body: fd }).catch(() => {});
+        }, 'image/jpeg', 0.85);
+      }, 500);
+
     } catch (err) {
-      console.error('Error uploading PC photo:', err);
+      console.error('Error starting PC webcam:', err);
+      alert('Could not access PC webcam. Please ensure camera permissions are granted.');
     }
   });
   let lastFetchedUrl = '';
