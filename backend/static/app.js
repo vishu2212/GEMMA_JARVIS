@@ -307,17 +307,17 @@ document.addEventListener('DOMContentLoaded', () => {
       if (!res.ok) return;
       const data = await res.json();
 
-      if (data.latest_image_url && data.latest_image_url !== lastFetchedUrl) {
-        lastFetchedUrl = data.latest_image_url;
-        const imgPreload = new Image();
-        imgPreload.onload = () => {
-          mobileLiveFrame.src = imgPreload.src;
+      if (data.latest_image_url && data.latest_image_url !== '') {
+        if (data.latest_image_url !== lastFetchedUrl) {
+          lastFetchedUrl = data.latest_image_url;
+          mobileLiveFrame.src = data.latest_image_url;
+        }
+        if (!pcWebcamStream) {
           mobileLiveFrame.style.display = 'block';
           camEmpty.style.display = 'none';
           camLiveBadge.style.display = 'flex';
           camFrameBadge.style.display = 'block';
-        };
-        imgPreload.src = data.latest_image_url;
+        }
       }
 
       if (data.phone_connected) {
