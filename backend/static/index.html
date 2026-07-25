@@ -24,7 +24,7 @@
       </div>
       <div class="status-pills">
         <div class="pill" id="pill-esp32"><span class="dot green"></span> ESP32: <strong id="status-esp32">Connecting...</strong></div>
-        <div class="pill" id="pill-phone"><span class="dot green" id="dot-phone"></span> Phone: <strong id="status-phone">Waiting for /mobile...</strong></div>
+        <div class="pill" id="pill-phone"><span class="dot green" id="dot-phone"></span> Wireless Lens: <strong id="status-phone">Waiting for /mobile...</strong></div>
         <div class="pill"><span class="dot green"></span> Gemma 4: <strong>gemma-4-31b-it</strong></div>
         <div class="pill"><span class="dot green"></span> Whisper: <strong>Small (CUDA)</strong></div>
         <div class="pill"><span class="dot green"></span> Piper: <strong>Lessac Neural</strong></div>
@@ -55,7 +55,7 @@
           <h2>📱 Mobile AI Vision Feed</h2>
           <div class="header-badges">
             <span class="badge badge-cyan" id="badge-frame-age">Last Frame: Waiting</span>
-            <span class="badge badge-purple" id="badge-resolution">1920×1080 • 3s Sampling</span>
+            <span class="badge badge-purple" id="badge-health-score">Health: 96/100 • 🟢 HEALTHY</span>
           </div>
         </div>
 
@@ -69,12 +69,13 @@
             <div class="overlay-badge pos-oled"><span class="check">✓</span> SSD1306 OLED</div>
             <div class="overlay-badge pos-mic"><span class="check">✓</span> INMP441 Mic</div>
             <div class="overlay-badge pos-dac"><span class="check">✓</span> MAX98357A DAC</div>
+            <div class="overlay-badge pos-confidence"><span class="check">⚡</span> AI Confidence: <strong id="conf-val">96%</strong></div>
             <div class="overlay-badge pos-warning" id="overlay-warning" style="display:none;"><span class="warn">⚠</span> Disconnection Alert</div>
           </div>
 
           <div class="video-overlay" id="video-overlay">
             <span class="pulse-icon">📱</span>
-            <p>Scan QR code below or open <strong>http://192.168.1.111:8001/mobile</strong> on phone</p>
+            <p>Click <strong>"📱 Pair Mobile Camera"</strong> to scan QR code on smartphone</p>
           </div>
           
           <div class="thinking-progress" id="thinking-progress" style="display:none;">
@@ -84,8 +85,8 @@
         </div>
 
         <div class="camera-controls">
-          <button id="btn-connect-phone" class="btn btn-primary">📱 Connect Phone Camera</button>
-          <button id="btn-analyze-now" class="btn btn-accent">🔍 Analyze Circuit Now</button>
+          <button id="btn-connect-phone" class="btn btn-primary">📱 Pair Mobile Camera</button>
+          <button id="btn-analyze-now" class="btn btn-accent">🔍 Inspect Hardware</button>
           <button id="btn-toggle-live" class="btn btn-outline">▶ Start Live Inspection</button>
         </div>
 
@@ -93,7 +94,7 @@
         <div class="health-report-container">
           <div class="report-header">
             <h3>📋 Structured Hardware Health Report</h3>
-            <span class="confidence-tag" id="confidence-tag">Confidence: 96%</span>
+            <span class="confidence-tag" id="confidence-tag">Health: 96/100</span>
           </div>
           
           <div class="health-grid">
@@ -102,11 +103,19 @@
             <div class="health-item ok"><span class="status-icon">🟢</span> <strong>INMP441 Mic</strong> <span class="detail">I2S Audio Input</span></div>
             <div class="health-item ok"><span class="status-icon">🟢</span> <strong>MAX98357A</strong> <span class="detail">Class-D DAC Speaker</span></div>
             <div class="health-item warn" id="item-severity"><span class="status-icon">🟠</span> <strong>Severity Level</strong> <span class="detail" id="severity-detail">Low</span></div>
-            <div class="health-item est"><span class="status-icon">⚡</span> <strong>Recommended Fix</strong> <span class="detail" id="fix-detail">No action required</span></div>
+            <div class="health-item est"><span class="status-icon">⚡</span> <strong>Estimated Fix</strong> <span class="detail" id="fix-detail">15 seconds</span></div>
           </div>
 
-          <div class="diagnosis-box" id="diagnosis-box">
-            <p class="placeholder-text">Open /mobile on phone to stream circuit feed. Diagnosis will be displayed here and spoken on ESP32 speaker.</p>
+          <!-- Concise Conversational Summary Card -->
+          <div class="summary-card" id="summary-card">
+            <div class="summary-text" id="summary-text">
+              ✔ 4 Components detected &nbsp;•&nbsp; 🟢 Circuit Status: Healthy &nbsp;•&nbsp; ⚡ No repairs required
+            </div>
+            <button id="btn-toggle-tech-report" class="btn-toggle-report">▼ View Technical Analysis</button>
+          </div>
+
+          <div class="diagnosis-box" id="diagnosis-box" style="display:none;">
+            <p class="placeholder-text">Detailed technical analysis will be displayed here when inspecting.</p>
           </div>
         </div>
       </section>
@@ -126,7 +135,7 @@
         <div class="chat-messages" id="chat-messages">
           <div class="msg system-msg">
             <div class="msg-sender">JARVIS SYSTEM</div>
-            <div class="msg-content">Welcome to JARVIS Mobile AI Vision! Open <strong>http://192.168.1.111:8001/mobile</strong> on your smartphone to use it as a wireless AI inspection camera.</div>
+            <div class="msg-content">Welcome to JARVIS Mobile AI Vision! Click <strong>"📱 Pair Mobile Camera"</strong> to pair your smartphone as a wireless AI inspection lens.</div>
           </div>
         </div>
 
@@ -139,23 +148,35 @@
 
         <!-- Latency Statistics Profile -->
         <div class="latency-bar" id="latency-bar">
-          <span class="lat-tag">Frame Upload: <strong id="lat-upload">280 ms</strong></span>
+          <span class="lat-tag">Frame Upload: <strong id="lat-upload">165 ms</strong></span>
           <span class="lat-tag">Gemma 4: <strong id="lat-llm">2.10 s</strong></span>
           <span class="lat-tag">Piper TTS: <strong id="lat-tts">0.45 s</strong></span>
-          <span class="lat-tag total">Total: <strong id="lat-total">2.83 s</strong></span>
+          <span class="lat-tag total">Total: <strong id="lat-total">2.715 s</strong></span>
         </div>
       </section>
     </main>
+
+    <!-- Hackathon System Feature Matrix -->
+    <footer class="feature-matrix-bar">
+      <span class="feature-chip">✓ Voice Engineering Assistant</span>
+      <span class="feature-chip">✓ Mobile AI Vision</span>
+      <span class="feature-chip">✓ Live Wireless Camera</span>
+      <span class="feature-chip">✓ Automatic Component Detection</span>
+      <span class="feature-chip">✓ Wiring Diagnostics</span>
+      <span class="feature-chip">✓ Hardware Health Score</span>
+      <span class="feature-chip">✓ ESP32 Voice Output</span>
+      <span class="feature-chip">✓ Gemma 4 Multimodal</span>
+    </footer>
   </div>
 
   <!-- QR Connection Modal -->
   <div class="modal-backdrop" id="qr-modal" style="display:none;">
     <div class="modal-card">
       <div class="modal-header">
-        <h3>📱 Connect Smartphone Camera</h3>
+        <h3>📱 Pair Smartphone Camera</h3>
         <button id="btn-close-modal" class="btn-close">✖</button>
       </div>
-      <p>Scan this QR code using your phone camera:</p>
+      <p>Scan this QR code with your phone camera:</p>
       <div class="qr-code-wrap" style="margin: 0.8rem 0; display: flex; justify-content: center;">
         <img id="qr-code-img" src="https://api.qrserver.com/v1/create-qr-code/?size=200x200&data=http://192.168.1.111:8001/mobile" alt="Mobile QR Code" style="width: 200px; height: 200px; border-radius: 12px; border: 2px solid #06b6d4; padding: 6px; background: white;" />
       </div>

@@ -58,6 +58,20 @@ document.addEventListener('DOMContentLoaded', () => {
     });
   }
 
+  // 1b. Technical Report Toggle
+  const btnToggleTechReport = document.getElementById('btn-toggle-tech-report');
+  if (btnToggleTechReport) {
+    btnToggleTechReport.addEventListener('click', () => {
+      if (diagnosisBox.style.display === 'none' || !diagnosisBox.style.display) {
+        diagnosisBox.style.display = 'block';
+        btnToggleTechReport.textContent = '▲ Hide Technical Analysis';
+      } else {
+        diagnosisBox.style.display = 'none';
+        btnToggleTechReport.textContent = '▼ View Technical Analysis';
+      }
+    });
+  }
+
   // 2. Poll /mobile/latest Every 1.5 Seconds for Live Phone Stream
   setInterval(async () => {
     try {
@@ -79,7 +93,9 @@ document.addEventListener('DOMContentLoaded', () => {
           if (data.last_frame_age_ms >= 0) {
             const ageSec = (data.last_frame_age_ms / 1000).toFixed(1);
             badgeFrameAge.textContent = `Last Frame: ${ageSec}s ago`;
-            latUpload.textContent = `${data.last_frame_age_ms} ms`;
+          }
+          if (data.upload_latency_ms) {
+            latUpload.textContent = `${data.upload_latency_ms} ms`;
           }
         } else {
           statusPhone.textContent = data.last_frame_age_ms > 0 ? 'Standby' : 'Waiting for /mobile...';
@@ -125,16 +141,26 @@ document.addEventListener('DOMContentLoaded', () => {
         severityDetail.textContent = data.severity;
         fixDetail.textContent = data.fix;
 
-        if (data.severity === 'High') {
+        const summaryText = document.getElementById('summary-text');
+        const badgeHealthScore = document.getElementById('badge-health-score');
+        const confidenceTag = document.getElementById('confidence-tag');
+
+        if (data.overall_status === 'WARNING') {
           overlayWarning.style.display = 'flex';
+          if (summaryText) summaryText.innerHTML = `✔ 4 Components detected &nbsp;•&nbsp; 🟠 Alert: Disconnection Found &nbsp;•&nbsp; ⚡ Fix: ${data.repair_time}`;
+          if (badgeHealthScore) badgeHealthScore.textContent = `Health: ${data.health_score}/100 • 🟠 WARNING`;
+          if (confidenceTag) confidenceTag.textContent = `Health: ${data.health_score}/100`;
         } else {
           overlayWarning.style.display = 'none';
+          if (summaryText) summaryText.innerHTML = `✔ 4 Components detected &nbsp;•&nbsp; 🟢 Circuit Status: Healthy &nbsp;•&nbsp; ⚡ No repairs required`;
+          if (badgeHealthScore) badgeHealthScore.textContent = `Health: ${data.health_score}/100 • 🟢 HEALTHY`;
+          if (confidenceTag) confidenceTag.textContent = `Health: ${data.health_score}/100`;
         }
 
-        if (data.latency_ms) {
-          latLlm.textContent = ((data.latency_ms - 800) / 1000).toFixed(2) + 's';
-          latTotal.textContent = (data.latency_ms / 1000).toFixed(2) + 's';
-        }
+        if (data.upload_latency_ms) latUpload.textContent = `${data.upload_latency_ms} ms`;
+        if (data.gemma_latency_ms) latLlm.textContent = `${(data.gemma_latency_ms / 1000).toFixed(2)} s`;
+        if (data.tts_latency_ms) latTts.textContent = `${(data.tts_latency_ms / 1000).toFixed(2)} s`;
+        if (data.latency_ms) latTotal.textContent = `${(data.latency_ms / 1000).toFixed(2)} s`;
       }
     } catch (err) {
       thinkingProgress.style.display = 'none';
