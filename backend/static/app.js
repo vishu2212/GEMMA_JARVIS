@@ -305,78 +305,89 @@ document.addEventListener('DOMContentLoaded', () => {
     }
   });
   /* ── WebSocket Live Video Stream Subscriber ───────────────────── */
+  let cameraConnected = false;
+  let videoWs = null;
+
   function connectVideoWsStream() {
     const wsProto = window.location.protocol === 'https:' ? 'wss:' : 'ws:';
     const videoWsUrl = `${wsProto}//${window.location.host}/ws/video`;
-    let ws = null;
 
     try {
-      ws = new WebSocket(videoWsUrl);
-      ws.onmessage = (event) => {
+      videoWs = new WebSocket(videoWsUrl);
+
+      videoWs.onopen = () => {
+        if (!cameraConnected) {
+          badgeFrameAge.textContent = 'Waiting for camera...';
+          badgeFrameAge.className = 'badge badge-amber';
+        }
+      };
+
+      videoWs.onmessage = (event) => {
         try {
           const msg = JSON.parse(event.data);
           if (msg.event === 'frame' && msg.data) {
             mobileLiveFrame.src = msg.data;
+            cameraConnected = true;
+
             if (!pcWebcamStream) {
               mobileLiveFrame.style.display = 'block';
               camEmpty.style.display = 'none';
               camLiveBadge.style.display = 'flex';
               camFrameBadge.style.display = 'block';
-              camFrameBadge.textContent = 'Live Phone Stream';
-              statusPhone.textContent = 'Connected';
+              camFrameBadge.textContent = 'Lens Connected';
+              statusPhone.textContent = 'Lens Connected';
               dotPhone.className = 'dot live';
-              badgeFrameAge.textContent = 'Live';
+              badgeFrameAge.textContent = 'Lens Connected';
               badgeFrameAge.className = 'badge badge-green';
             }
           }
         } catch (e) {}
       };
-      ws.onclose = () => setTimeout(connectVideoWsStream, 3000);
-      ws.onerror = () => {};
+
+      videoWs.onclose = () => {
+        badgeFrameAge.textContent = 'Reconnecting...';
+        badgeFrameAge.className = 'badge badge-amber';
+        setTimeout(connectVideoWsStream, 2000);
+      };
+
+      videoWs.onerror = () => {
+        badgeFrameAge.textContent = 'Reconnecting...';
+        badgeFrameAge.className = 'badge badge-amber';
+      };
     } catch (e) {
-      setTimeout(connectVideoWsStream, 5000);
+      setTimeout(connectVideoWsStream, 2000);
     }
   }
+
   connectVideoWsStream();
+
+  /* ── Metadata Polling (1s) ─────────── */
   setInterval(async () => {
     try {
       const res = await fetch('/mobile/latest');
       if (!res.ok) return;
       const data = await res.json();
 
-      if (data.latest_image_url && data.latest_image_url !== '') {
-        if (data.latest_image_url !== lastFetchedUrl) {
-          lastFetchedUrl = data.latest_image_url;
-          mobileLiveFrame.src = data.latest_image_url;
-        }
-        if (!pcWebcamStream) {
-          mobileLiveFrame.style.display = 'block';
-          camEmpty.style.display = 'none';
-          camLiveBadge.style.display = 'flex';
-          camFrameBadge.style.display = 'block';
-        }
-      }
-
       if (data.phone_connected) {
-        statusPhone.textContent = 'Connected';
+        statusPhone.textContent = 'Lens Connected';
         dotPhone.className = 'dot live';
-        badgeFrameAge.textContent = `Live`;
-        badgeFrameAge.className = 'badge badge-green';
         if (data.last_frame_age_ms >= 0) {
           camFrameBadge.textContent = `${(data.last_frame_age_ms / 1000).toFixed(1)}s ago`;
         }
         if (data.upload_latency_ms) {
           tlCamera.textContent = `${data.upload_latency_ms}ms`;
-          animateTimelineFill('tlf-camera', 6); // 6% proportion
+          animateTimelineFill('tlf-camera', 6);
         }
       } else {
-        statusPhone.textContent = 'Offline';
-        dotPhone.className = 'dot idle';
-        badgeFrameAge.textContent = 'Waiting for camera…';
-        badgeFrameAge.className = 'badge badge-amber';
+        if (!cameraConnected) {
+          statusPhone.textContent = 'Lens Offline';
+          dotPhone.className = 'dot idle';
+          badgeFrameAge.textContent = 'Lens Offline';
+          badgeFrameAge.className = 'badge badge-amber';
+        }
       }
     } catch (e) {}
-  }, 250);
+  }, 1000);
 
   /* ── Analyze Latest Frame ─────────────────────────────────── */
   btnAnalyzeNow?.addEventListener('click', analyzeLatestMobileFrame);
