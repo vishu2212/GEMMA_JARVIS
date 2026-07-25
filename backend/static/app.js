@@ -242,6 +242,10 @@ document.addEventListener('DOMContentLoaded', () => {
         badgeFrameAge.textContent = 'Live';
         badgeFrameAge.className = 'badge badge-green';
       }
+    } catch (err) {
+      console.error('Error uploading PC photo:', err);
+    }
+  });
   /* ── Direct PC Webcam Stream ─────────────────────────────── */
   const pcWebcamVideo = document.getElementById('pc-webcam-video');
   const btnStartPcWebcam = document.getElementById('btn-start-pc-webcam');
