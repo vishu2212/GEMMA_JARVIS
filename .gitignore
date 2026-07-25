@@ -1,26 +1,40 @@
-# Python virtual environments
+# Python
+__pycache__/
+*.py[cod]
+.venv/
+venv/
 backend/venv/
 backend/.venv/
-**/__pycache__/
-*.pyc
 
-# ESP-IDF build output
+# Node
+node_modules/
+dist/
 build/
-**/build/
+
+# Environment & Keys
+.env
+.env.*
+*.pem
+
+# Logs & Temporary Data
+logs/
+*.log
+backend/temp/
+temp/
+cache/
+*.wav
+*.pcm
+
+# Large Models & Binary Weights
+models/
+
+# ESP-IDF & Hardware Builds
 **/sdkconfig
 **/sdkconfig.old
 **/managed_components/
 
-# Temporary audio directories & files
-backend/temp/
-*.wav
-*.pcm
-
-# Large model weights (too big for GitHub)
-models/
-
-# VS Code & local configs
+# OS & IDE
+.DS_Store
+Thumbs.db
 .vscode/
 .idea/
-.env
-*.log

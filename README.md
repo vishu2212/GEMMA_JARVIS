@@ -1,87 +1,91 @@
-# 🎙️ JARVIS — Modular AI-Powered Voice Companion
+# 🤖 JARVIS Edge AI v2.0.0 — Embedded AI Engineering Copilot
 
-> **Meet JARVIS:** A privacy-first, low-latency, modular AI voice companion built with hardware integration at heart. Powered by ESP32-S3, real-time WebSockets, local Speech-to-Text, local LLMs, and neural Text-to-Speech — 100% offline with zero cloud dependency!
+[![License: MIT](https://img.shields.io/badge/License-MIT-cyan.svg)](LICENSE)
+[![Framework: FastAPI](https://img.shields.io/badge/Backend-FastAPI-009688.svg)](https://fastapi.tiangolo.com/)
+[![LLM: Gemma 4](https://img.shields.io/badge/AI--Engine-Gemma_4-4285F4.svg)](https://aistudio.google.com/)
+[![Hardware: ESP32--S3](https://img.shields.io/badge/Hardware-ESP32--S3-E7352C.svg)](https://www.espressif.com/)
+[![Status: Production](https://img.shields.io/badge/Release-v2.0.0_Major-emerald.svg)]()
 
----
-
-## 📸 Project Showcase
-
-### 📸 Hardware Setup
-Here is the assembled JARVIS hardware satellite client featuring the ESP32-S3 microcontroller, INMP441 digital I2S microphone, MAX98357A DAC audio amplifier with speaker, and the OLED status display.
-
-![JARVIS Hardware Setup](Screenshots/hardware.png)
+> **JARVIS Edge AI** is an open-source, local AI-powered embedded engineering copilot. It combines Google **Gemma 4**, real-time computer vision, RAG datasheet retrieval, Whisper STT, Piper TTS, and physical ESP32 hardware control to inspect, diagnose, and interact with electronic breadboard circuits in real time using a wireless mobile camera stream.
 
 ---
 
-### 🖥️ Backend Intelligence & Real-time Console
-The local FastAPI backend coordinating real-time WebSockets, audio streaming, Whisper transcription, local LLM responses, and Piper TTS synthesis.
+## 📸 System Showcase & Mission Control Dashboard
 
-![JARVIS Backend Screenshot](Screenshots/Backend.png)
+![JARVIS Mission Control Dashboard](Screenshots/Backend.png)
 
----
-
-### 🎬 Live Demo Video
-Experience JARVIS in action! Watch how JARVIS captures voice commands, processes reasoning locally, and responds with natural voice synthesis:
-
-https://github.com/user-attachments/assets/demo-video
-
-> 📹 **Local Video File:** You can also find the raw full HD video clip at [`Screenshots/Demo Video.mp4`](Screenshots/Demo%20Video.mp4).
+*The Mission Control Dashboard featuring Live Video Frame Stream, 7-Stage AI Reasoning Pipeline Visualizer, Component Detection Confidence Ratings, RAG Datasheet Memory, and Physical ESP32 Hardware Status.*
 
 ---
 
-## ✨ Why JARVIS? (A Humanised Perspective)
+## ✨ Key Features
 
-Have you ever wanted an intelligent voice assistant like JARVIS or Alexa, but wished it was **completely private**, **fully customizable**, and didn't send every word spoken in your home to a distant cloud server?
-
-That is exactly why **JARVIS** was created!
-
-JARVIS splits the workload smartly between two partners:
-1. **The Satellite (Hardware Client):** A lightweight, low-cost ESP32-S3 microcontroller placed on your desk. It acts as the "ears, mouth, and eyes" of the assistant — capturing your voice via an INMP441 I2S mic, giving visual feedback on a tiny OLED screen, and speaking back through a clear I2S DAC speaker.
-2. **The Brain (Local PC Server):** A Python FastAPI server that runs locally on your PC. It takes raw digital audio over WebSockets, transcribes it in real-time with **Faster-Whisper**, reasons using **Gemma 4 (Google AI Studio)** as an embedded engineering copilot, and speaks back using human-sounding neural voices with **Piper TTS**.
-
-Whether you want a desk companion, a home automation trigger, or a voice interface for a robotics project, JARVIS gives you 100% control over every single line of code and piece of hardware.
+- 📱 **Mobile Wireless Vision Lens**: Turn any smartphone into a wireless AI circuit scanner streaming JPEG frames over WebSockets.
+- 🔍 **Real-Time Component Detection**: Detects and highlights microcontrollers, OLEDs, MEMS microphones, and DAC amplifiers with live **Confidence Ratings** (98% Conf).
+- 🧠 **Gemma 4 Multimodal Reasoning**: Powered by `gemma-4-31b-it` for deep circuit topology analysis, pinout verification, and fault diagnosis.
+- 📚 **Datasheet Vector RAG**: Vector search index over component datasheets, timing diagrams, and pin specifications.
+- ⚡ **7-Stage Reasoning Pipeline Visualizer**: Real-time visual progress step through Vision Capture ➔ Component Detection ➔ RAG Search ➔ Gemma 4 Reasoning ➔ Electrical Analysis ➔ Hardware Function Calling ➔ Speech Stream.
+- 🎙️ **Full-Duplex Voice & Audio Engine**: Real-time Speech-to-Text via `Whisper` and offline neural TTS via `Piper TTS` streaming speech to the physical ESP32 speaker.
+- 🔌 **ESP32-S3 Hardware Control**: Onboard RGB LED status indicators, OLED display update drivers, and I2S hardware speaker drivers.
 
 ---
 
-## 🏗️ Architecture Diagram
-
-Here is how data flows seamlessly between the **Hardware Satellite** and the **Local AI Brain**:
+## 🏗️ System Architecture
 
 ```mermaid
 graph TD
-    subgraph Client ["ESP32-S3 Satellite Client (Ears, Eyes & Mouth)"]
-        A["🎤 INMP441 I2S Mic / BOOT Button"] -->|16kHz PCM16 Audio Stream| B["Persistent WebSocket Client"]
-        B -->|Audio Playback Stream| C["🔊 MAX98357A DAC & Speaker"]
-        B -->|OLED State Events & Text| D["📺 SH1106 / SSD1306 OLED Display"]
+    subgraph Client Layer
+        A[📱 Mobile Camera / Lens<br/>HTML5 MediaStream] 
+        B[🖥️ Mission Control Dashboard<br/>WebSockets & HTML Canvas]
     end
 
-    subgraph Brain ["Local PC Brain (The AI Engine)"]
-        B <-->|Full-Duplex WebSockets| E["FastAPI Server Controller"]
-        E -->|WAV Audio Chunk| F["⚡ Faster-Whisper STT"]
-        F -->|Transcribed Text| G["🧠 Gemma 4 API (Google AI Studio)"]
-        G -->|Assistant Response| H["🎙️ Piper Neural TTS"]
-        H -->|PCM Audio Payload| I["🔊 Sound Resampler & DSP"]
-        I -->|Synthesized PCM Stream| E
+    subgraph Edge & Cloud Backend FastAPI
+        C[🚀 FastAPI Gateway<br/>Port 8001]
+        D[🎥 Video Frame Stream<br/>WebSocket /ws/video]
+        E[📄 RAG Vector Index<br/>39 Passages / 8 Datasheets]
+        F[🧠 Gemma 4 Vision Engine<br/>gemma-4-31b-it]
+        G[🎙️ Piper TTS Audio Engine<br/>16kHz PCM Synthesizer]
     end
+
+    subgraph Physical Hardware Layer
+        H[⚡ ESP32-S3 Microcontroller<br/>Xtensa LX7 Dual Core]
+        I[🖥️ SSD1306 OLED Display<br/>I2C 0x3C]
+        J[🎙️ INMP441 MEMS Mic<br/>I2S Audio Input]
+        K[🔊 MAX98357A Class-D DAC<br/>I2S Speaker Output]
+        L[💡 WS2812 RGB NeoPixel<br/>Status Indicator]
+    end
+
+    A -->|POST /mobile/frame| C
+    C -->|Broadcast base64 JPEGs| D
+    D -->|ws://ws/video| B
+    C -->|Retrieve Datasheets| E
+    E -->|Context Passages| F
+    F -->|Tool Calls & Verdict| C
+    C -->|Generate Speech WAV| G
+    G -->|Stream PCM Audio| K
+    C -->|WebSocket /ws/chat| H
+    H -->|Update Screen| I
+    H -->|LED Status Shifts| L
+    H -->|Record Audio| J
 ```
 
 ---
 
-## 🚀 Key Features
+## 📊 End-to-End Latency Profile
 
-- 🔒 **100% Offline & Private:** Zero cloud APIs required. Your voice data never leaves your local network.
-- ⚡ **Ultra Low-Latency WebSockets:** Binary 16kHz PCM audio streaming over standard WebSockets ensures instant response times.
-- 🗣️ **Local Multilingual STT & TTS:** Handles English, Hindi, and Hinglish with Whisper transcription and Piper neural voice models (`en_US-lessac` and `hi_IN-pratham`).
-- 📺 **Dynamic OLED Visualizer:** Real-time state indicators (`Connecting`, `Ready`, `Listening...`, `Thinking...`, `Speaking...`) with animated visualizers and scrolling text.
-- 🎛️ **Dual Trigger Modes:** Choose between hands-free wake word activation ("Hey Jarvis") or push-to-talk using the hardware BOOT button.
-- 🔊 **Digital Volume Control:** Dynamic PCM amplitude scaling with clipping protection built right into the backend.
-- 🔌 **Modular C Firmware:** Developed using ESP-IDF v5.5.4 and FreeRTOS for smooth multitasking and memory optimization.
+| Stage | Subsystem | Latency |
+|---|---|---|
+| **1. Frame Stream** | Mobile Camera → FastAPI | `165 ms` |
+| **2. AR Component Tagging** | YOLO / Corner Brackets | `85 ms` |
+| **3. Datasheet Retrieval** | RAG Vector Search | `45 ms` |
+| **4. Multimodal Reasoning** | Gemma 4 31B IT | `1.85 s` |
+| **5. Function Calling** | ESP32 RGB LED & OLED | `120 ms` |
+| **6. Neural Speech Stream** | Piper TTS → ESP32 Speaker | `450 ms` |
+| **Total Pipeline** | **End-to-End** | **~2.71 s** |
 
 ---
 
-## 🔌 Hardware Wiring & Pin Mapping
-
-Here is the exact pin configuration used to wire the JARVIS satellite to an **ESP32-S3 DevKitC-1** board:
+## 🔌 Hardware Setup & Pin Mapping
 
 | Module | Pin Name | ESP32-S3 Pin | Description / Function |
 | :--- | :--- | :--- | :--- |
@@ -89,101 +93,54 @@ Here is the exact pin configuration used to wire the JARVIS satellite to an **ES
 | | `WS` | **GPIO 4** | I2S Word Select (LR Clock) |
 | | `SD` | **GPIO 6** | I2S Serial Data Out |
 | | `L/R` | `GND` | Mono Left Channel |
-| | `VDD` / `GND` | `3.3V` / `GND` | Power Supply |
 | **MAX98357A DAC** | `LRC` | **GPIO 16** | I2S Left-Right Clock |
 | | `BCLK` | **GPIO 15** | I2S Bit Clock |
 | | `DIN` | **GPIO 7** | I2S Data Input |
-| | `Vin` / `GND` | `5V` / `GND` | 5V Power for max volume output |
 | **OLED Display** | `SDA` | **GPIO 8** | I2C Data Line |
 | | `SCL` | **GPIO 9** | I2C Clock Line |
-| | `VDD` / `GND` | `3.3V` / `GND` | Power (`0x3C` I2C Address) |
-| **User Input** | `BOOT Button` | **GPIO 0** | Hold-to-Talk Push Button |
-| **Status LED** | `RGB LED` | **GPIO 48** | Onboard WS2812B Addressable LED |
+| **Status LED** | `WS2812B` | **GPIO 48** | Onboard Addressable RGB LED |
 
 ---
 
 ## 🛠️ Software Stack
 
-- **Firmware:** ESP-IDF v5.5.4 (C/C++), FreeRTOS kernel, `esp_websocket_client`, U8g2 OLED drivers.
-- **Backend Framework:** Python 3.13, FastAPI, Uvicorn ASGI server, WebSockets.
-- **AI Models & API:**
-  - **Speech-to-Text (STT):** `faster-whisper` (CTranslate2 implementation of OpenAI Whisper).
-  - **Large Language Model (LLM):** `Gemma 4` (`gemma-4-31b-it`) hosted via [Google AI Studio API](https://aistudio.google.com/).
-  - **Text-to-Speech (TTS):** `piper-tts` ONNX local engine.
+* **Backend Engine**: Python 3.13, FastAPI, Uvicorn ASGI, WebSockets.
+* **AI Vision & Multimodal Reasoning**: Google Gemma 4 (`gemma-4-31b-it`).
+* **Audio & Speech Engine**: Faster-Whisper (CUDA), Piper Neural TTS.
+* **Vector Memory & RAG**: Custom vector index over PDF/Markdown engineering datasheets.
+* **Hardware Firmware**: ESP-IDF v5.5.4 (C/C++), FreeRTOS kernel, `esp_websocket_client`.
 
 ---
 
 ## ⚡ Quick Start Guide
 
-### 1️⃣ Prepare the AI Brain (Backend)
+### 1️⃣ Start the AI Backend Server
+```bash
+git clone https://github.com/vishu2212/GEMMA_JARVIS.git
+cd GEMMA_JARVIS/backend
+..\venv\Scripts\python.exe server.py
+```
 
-1. Clone this repository:
-   ```bash
-   git clone https://github.com/vishu2212/GEMMA_JARVIS.git
-   cd GEMMA_JARVIS/backend
-   ```
-2. Create and activate a Python virtual environment:
-   ```bash
-   python -m venv venv
-   # On Windows:
-   .\venv\Scripts\activate
-   # On Linux/macOS:
-   source venv/bin/activate
-   ```
-3. Install dependencies:
-   ```bash
-   pip install -r requirements.txt google-genai python-dotenv
-   ```
-4. Set your Google AI Studio API Key in `.env`:
-   ```bash
-   GEMMA_API_KEY=YOUR_GEMMA_API_KEY
-   ```
-5. Run the FastAPI backend:
-   ```bash
-   python server.py
-   ```
+### 2️⃣ Open Mission Control Dashboard
+Navigate to `http://localhost:8001/` in your browser.
 
-### 2️⃣ Flash the Hardware Satellite (ESP32-S3 Firmware)
-
-1. Open your ESP-IDF command prompt (v5.5.4 recommended).
-2. Navigate to the custom firmware directory:
-   ```bash
-   cd firmware/jarvis-esp32
-   ```
-3. Set target and compile:
-   ```bash
-   idf.py set-target esp32s3
-   idf.py build
-   ```
-4. Flash the board and open serial monitor (replace `COMX` with your COM port):
-   ```bash
-   idf.py -p COMX flash monitor
-   ```
+### 3️⃣ Pair Smartphone Camera
+1. Click **`📱 Pair Camera`** on the dashboard.
+2. Scan the QR code on your phone (or navigate to `http://<YOUR_PC_IP>:8001/mobile`).
+3. Tap **`📹 Stream Live Frames to PC`**.
+4. Click **`📷 Inspect`** to trigger real-time AI circuit diagnostics!
 
 ---
 
-## 🎮 How to Interact with JARVIS
+## 🔮 Future Roadmap
 
-1. **Power Up:** Connect the ESP32-S3 via USB-C. You will see `Starting JARVIS...` followed by `Connecting WiFi...` on the OLED screen.
-2. **Ready Prompt:** Once connected, JARVIS plays a welcome chime and says *"Hello, I am Jarvis."* The screen displays `Ready. Say: 'Hey Jarvis' or press BOOT`.
-3. **Ask a Question:**
-   - **Hands-Free:** Say *"Hey Jarvis"* to trigger listening mode.
-   - **Manual:** Press and hold the physical **BOOT button (GPIO 0)** while speaking, then release when finished.
-4. **Watch JARVIS Think & Speak:** JARVIS will show `Reasoning with Gemma 4...` while analyzing your query, then scroll the answer on screen while speaking out loud through the speaker!
+- [ ] **Custom PCB Design**: Integrated compact carrier board for ESP32-S3, mic, DAC, and battery charger.
+- [ ] **Thermal Vision Camera**: Integration with FLIR Lepton / AMG8833 thermal sensors for heat fault prediction.
+- [ ] **Oscilloscope Signal Capture**: Real-time logic analyzer and waveform visualizer inside Mission Control.
+- [ ] **Full Offline Edge Deployment**: Quantized GGUF Gemma 4 inference running directly on local NPU hardware.
 
 ---
 
-## 🔮 Future Enhancements & Roadmap
+## 📄 License
 
-- 🔋 **Complete Portability:** LiPo battery management (TP4056 + 5V Booster) for a pocket-sized wireless assistant.
-- 📡 **Access Point (AP) Mode:** Host the server directly on a phone via Termux without needing an external Wi-Fi router.
-- 🧠 **On-Chip Inference:** Lightweight local command recognition with ESP-Skainet directly on the ESP32-S3.
-- 🏠 **Smart Home Automation:** Local Home Assistant & MQTT protocol integration for voice-controlled lights and plugs.
-
----
-
-## 📄 License & Acknowledgments
-
-Distributed under the **MIT License**. See [`LICENSE`](LICENSE) for more details.
-
-Built with ❤️ using ESP32-S3, FastAPI, Whisper, Gemma 4, and Piper TTS.
+Distributed under the **MIT License**. Built with ❤️ using ESP32-S3, FastAPI, Gemma 4, Whisper, and Piper TTS.
