@@ -1,3 +1,4 @@
+import io
 import os
 import re
 import uuid
@@ -6,6 +7,7 @@ import json
 import asyncio
 import soundfile as sf
 import numpy as np
+from PIL import Image
 from typing import List, Optional
 from fastapi import APIRouter, File, UploadFile, Form, BackgroundTasks, HTTPException, WebSocket, WebSocketDisconnect
 from fastapi.responses import FileResponse
@@ -306,6 +308,52 @@ async def post_speak(
         if output_wav_path and os.path.exists(output_wav_path):
             remove_temp_file(output_wav_path)
         raise HTTPException(status_code=500, detail=str(e))
+
+
+class VisionAnalysisResponse(BaseModel):
+    status: str
+    prompt: str
+    analysis: str
+    audio_url: Optional[str] = None
+    latency_ms: int
+
+
+@router.post("/vision/analyze", response_model=VisionAnalysisResponse)
+async def post_vision_analyze(
+    file: UploadFile = File(...),
+    prompt: Optional[str] = Form(None),
+    session_id: str = Form("default")
+):
+    """Uploads a hardware/circuit image and analyzes it using Gemma 4 Multimodal Vision."""
+    start_time = time.perf_counter()
+    logger.info(f"Received circuit vision analysis request (File: {file.filename})")
+    try:
+        image_bytes = await file.read()
+        image = Image.open(io.BytesIO(image_bytes))
+        
+        user_prompt = prompt or "JARVIS, what's wrong with my circuit?"
+        analysis_text = await llm_service.analyze_circuit_image(image, user_prompt)
+        
+        conversation_service.add_message(session_id, "user", f"[Uploaded Circuit Image] {user_prompt}")
+        conversation_service.add_message(session_id, "assistant", analysis_text)
+        
+        # Synthesize audio response so hardware speaker can speak it
+        output_wav_path = await tts_service.speak(analysis_text)
+        audio_filename = os.path.basename(output_wav_path)
+        audio_url = f"/temp/audio/{audio_filename}"
+        
+        total_ms = int((time.perf_counter() - start_time) * 1000)
+        
+        return VisionAnalysisResponse(
+            status="success",
+            prompt=user_prompt,
+            analysis=analysis_text,
+            audio_url=audio_url,
+            latency_ms=total_ms
+        )
+    except Exception as e:
+        logger.error(f"Error in /vision/analyze: {e}", exc_info=True)
+        raise HTTPException(status_code=500, detail=f"Vision analysis failed: {str(e)}")
 
 
 def get_resampled_pcm16_bytes(wav_path, target_sr=16000, volume_multiplier=1.0) -> bytes:

@@ -61,6 +61,42 @@ class LLMService:
             logger.error(f"Error calling Gemma API: {e}", exc_info=True)
             raise RuntimeError(f"Gemma API call failed: {e}")
 
+    async def analyze_circuit_image(self, image_input, prompt: str = "") -> str:
+        """Analyzes a breadboard/hardware circuit image using Gemma 4 Multimodal Vision API."""
+        if not self.client:
+            self.api_key = os.getenv("GEMMA_API_KEY", "")
+            if not self.api_key:
+                raise RuntimeError("GEMMA_API_KEY is not configured in backend/.env")
+            self.client = genai.Client(api_key=self.api_key)
+
+        default_system_prompt = (
+            "You are JARVIS Vision AI, an expert embedded hardware and circuit engineer copilot. "
+            "Analyze the provided image of a breadboard, microcontroller, circuit diagram, or electronic setup. "
+            "1. Identify the components present (e.g. ESP32, ESP32-S3, INMP441 Mic, MAX98357A DAC, SSD1306 OLED, sensors). "
+            "2. Detect any missing connections, swapped pins, power rail errors, or loose wires. "
+            "3. Keep your response concise, clear, and direct (under 100 words) so it can be read aloud over speech."
+        )
+
+        user_prompt = prompt or "JARVIS, what's wrong with my circuit?"
+        full_prompt = f"{default_system_prompt}\n\nUser Question: {user_prompt}"
+
+        logger.info(f"Sending hardware vision analysis request to Gemma 4 API (Model: {self.model})")
+        try:
+            response = self.client.models.generate_content(
+                model=self.model,
+                contents=[full_prompt, image_input]
+            )
+
+            if not response or not response.text:
+                raise RuntimeError("Empty vision response from Gemma API")
+
+            reply = response.text.strip()
+            logger.info("Successfully received circuit vision analysis from Gemma 4 API.")
+            return reply
+        except Exception as e:
+            logger.error(f"Error in circuit vision analysis: {e}", exc_info=True)
+            raise RuntimeError(f"Gemma 4 Vision API call failed: {e}")
+
     async def get_available_models(self) -> List[str]:
         """Queries Google GenAI API and returns available models."""
         logger.info("Querying available models from Google GenAI API")
