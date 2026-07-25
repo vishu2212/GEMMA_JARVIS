@@ -170,12 +170,13 @@ document.addEventListener('DOMContentLoaded', () => {
   /* ── QR Modal ─────────────────────────────────────────────── */
   function openQrModal() {
     const isLocal = (window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1');
+    const portStr = window.location.port ? `:${window.location.port}` : '';
     const fullUrl = isLocal 
-      ? 'http://192.168.1.111:8001/mobile' 
-      : `${window.location.origin}/mobile`;
+      ? `http://192.168.1.111${portStr || ':8001'}/mobile` 
+      : `${window.location.protocol}//${window.location.host}/mobile`;
       
     if (mobileUrl) {
-      mobileUrl.innerHTML = `<a href="${fullUrl}" target="_blank" style="color:var(--cyan);text-decoration:none;">${fullUrl}</a>`;
+      mobileUrl.innerHTML = `<a href="${fullUrl}" target="_blank" style="color:var(--cyan);text-decoration:none;font-weight:700;">${fullUrl}</a>`;
     }
     const qrImg = document.getElementById('qr-code-img');
     if (qrImg) {
