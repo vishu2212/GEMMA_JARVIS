@@ -4,11 +4,31 @@
     {
       "src": "api/index.py",
       "use": "@vercel/python"
+    },
+    {
+      "src": "backend/static/**",
+      "use": "@vercel/static"
     }
   ],
   "routes": [
     {
-      "src": "/(.*)",
+      "src": "/",
+      "dest": "/backend/static/index.html"
+    },
+    {
+      "src": "/mobile",
+      "dest": "/backend/static/mobile.html"
+    },
+    {
+      "src": "/camera",
+      "dest": "/backend/static/camera.html"
+    },
+    {
+      "src": "/static/(.*)",
+      "dest": "/backend/static/$1"
+    },
+    {
+      "src": "/(vision|chat|system|device|memory|health|docs|openapi.json)(.*)",
       "dest": "api/index.py"
     }
   ]
