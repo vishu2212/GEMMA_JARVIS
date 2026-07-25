@@ -374,6 +374,61 @@ document.addEventListener('DOMContentLoaded', () => {
   }
   fetchUserMemory();
 
+  // 10. Real Device Control Handlers (LED Toggle & OLED Text Update)
+  const btnToggleLed = document.getElementById('btn-toggle-led');
+  const ledStatusTag = document.getElementById('led-status-tag');
+  const btnSendOled = document.getElementById('btn-send-oled');
+  const oledTextInput = document.getElementById('oled-text-input');
+  let isLedOn = false;
+
+  if (btnToggleLed) {
+    btnToggleLed.addEventListener('click', async () => {
+      isLedOn = !isLedOn;
+      const action = isLedOn ? 'led_on' : 'led_off';
+      try {
+        const res = await fetch('/device/control', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ action: action })
+        });
+        const data = await res.json();
+        if (data.status === 'success') {
+          if (ledStatusTag) ledStatusTag.textContent = isLedOn ? 'LED: ON (🟢)' : 'LED: OFF';
+          addChatMessage('SYSTEM', `Physical device action: ${isLedOn ? '💡 LED Turned ON' : '💡 LED Turned OFF'}`, 'system-msg', null, { name: 'control_esp32_led', result: data.result });
+        }
+      } catch (e) {}
+    });
+  }
+
+  async function sendOledText(text) {
+    if (!text) return;
+    try {
+      const res = await fetch('/device/control', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ action: 'update_oled', text: text })
+      });
+      const data = await res.json();
+      if (data.status === 'success') {
+        addChatMessage('SYSTEM', `OLED display updated: <strong>"${text}"</strong>`, 'system-msg', null, { name: 'update_esp32_oled', result: data.result });
+      }
+    } catch (e) {}
+  }
+
+  if (btnSendOled) {
+    btnSendOled.addEventListener('click', () => {
+      if (oledTextInput) sendOledText(oledTextInput.value.trim());
+    });
+  }
+
+  document.querySelectorAll('.btn-preset').forEach(btn => {
+    btn.addEventListener('click', () => {
+      const text = btn.getAttribute('data-text');
+      if (oledTextInput) oledTextInput.value = text;
+      sendOledText(text);
+    });
+  });
+
   // Volume Slider
   volSlider.addEventListener('input', (e) => {
     volVal.textContent = e.target.value + '%';

@@ -205,6 +205,26 @@
           </div>
         </div>
 
+        <!-- Real ESP32 Hardware Device Controls Card -->
+        <div class="device-control-card">
+          <div class="device-header">
+            <h3>🎛️ Real ESP32 Hardware Device Controls</h3>
+            <span class="device-status-tag" id="led-status-tag">LED: OFF</span>
+          </div>
+          <div class="device-controls-row">
+            <button id="btn-toggle-led" class="btn btn-outline btn-sm">💡 Toggle Onboard LED</button>
+            <div class="oled-input-wrap">
+              <input type="text" id="oled-text-input" placeholder="Text for OLED (e.g. Hello DTU)..." value="Hello DTU" />
+              <button id="btn-send-oled" class="btn btn-primary btn-sm">🖥️ Send to OLED</button>
+            </div>
+          </div>
+          <div class="preset-buttons-row">
+            <button class="btn-preset" data-text="Hello DTU">"Hello DTU"</button>
+            <button class="btn-preset" data-text="JARVIS AI">"JARVIS AI"</button>
+            <button class="btn-preset" data-text="INSPECTED">"INSPECTED"</button>
+          </div>
+        </div>
+
         <!-- Latency Statistics Profile -->
         <div class="latency-bar" id="latency-bar">
           <span class="lat-tag">Frame Upload: <strong id="lat-upload">165 ms</strong></span>

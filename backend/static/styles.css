@@ -743,3 +743,83 @@ body {
   font-size: 0.75rem;
   font-family: 'JetBrains Mono', monospace;
 }
+
+/* Real ESP32 Hardware Device Controls Panel */
+.device-control-card {
+  background: rgba(2, 6, 23, 0.7);
+  border: 1px solid rgba(16, 185, 129, 0.3);
+  border-radius: 12px;
+  padding: 0.75rem 1rem;
+  display: flex;
+  flex-direction: column;
+  gap: 0.6rem;
+}
+
+.device-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+}
+
+.device-header h3 {
+  font-size: 0.88rem;
+  font-weight: 700;
+  color: var(--accent-green);
+}
+
+.device-status-tag {
+  background: rgba(16, 185, 129, 0.15);
+  color: var(--accent-green);
+  padding: 0.15rem 0.5rem;
+  border-radius: 10px;
+  font-size: 0.72rem;
+  font-weight: 600;
+}
+
+.device-controls-row {
+  display: flex;
+  gap: 0.5rem;
+  align-items: center;
+}
+
+.oled-input-wrap {
+  display: flex;
+  gap: 0.3rem;
+  flex: 1;
+}
+
+.oled-input-wrap input {
+  background: rgba(255, 255, 255, 0.05);
+  border: 1px solid rgba(255, 255, 255, 0.15);
+  border-radius: 6px;
+  padding: 0.25rem 0.5rem;
+  color: #ffffff;
+  font-size: 0.76rem;
+  flex: 1;
+}
+
+.btn-sm {
+  padding: 0.25rem 0.55rem !important;
+  font-size: 0.76rem !important;
+}
+
+.preset-buttons-row {
+  display: flex;
+  gap: 0.35rem;
+}
+
+.btn-preset {
+  background: rgba(16, 185, 129, 0.1);
+  border: 1px solid rgba(16, 185, 129, 0.3);
+  color: var(--text-main);
+  padding: 0.18rem 0.5rem;
+  border-radius: 4px;
+  font-size: 0.72rem;
+  cursor: pointer;
+  transition: all 0.2s ease;
+}
+
+.btn-preset:hover {
+  background: rgba(16, 185, 129, 0.25);
+  color: #ffffff;
+}

@@ -860,13 +860,34 @@ async def post_tools_execute(request: ToolExecuteRequest):
         "get_system_info": function_calling_service.get_system_info,
         "get_network_info": function_calling_service.get_network_info,
         "restart_microphone": function_calling_service.restart_microphone,
-        "read_sd_card": function_calling_service.read_sd_card
+        "read_sd_card": function_calling_service.read_sd_card,
+        "control_esp32_led": lambda: function_calling_service.control_esp32_led(True),
+        "update_esp32_oled": lambda: function_calling_service.update_esp32_oled("Hello DTU")
     }
     if request.tool_name not in func_map:
         raise HTTPException(status_code=400, detail=f"Tool '{request.tool_name}' not found.")
     
     result = func_map[request.tool_name]()
     return {"status": "success", "tool_name": request.tool_name, "result": result}
+
+
+class DeviceControlRequest(BaseModel):
+    action: str  # "led_on", "led_off", "update_oled"
+    text: Optional[str] = "Hello DTU"
+
+@router.post("/device/control")
+async def post_device_control(request: DeviceControlRequest):
+    """Direct web UI hardware device control endpoint."""
+    if request.action == "led_on":
+        res = function_calling_service.control_esp32_led(True)
+    elif request.action == "led_off":
+        res = function_calling_service.control_esp32_led(False)
+    elif request.action == "update_oled":
+        res = function_calling_service.update_esp32_oled(request.text or "Hello DTU")
+    else:
+        raise HTTPException(status_code=400, detail=f"Unknown device control action: {request.action}")
+
+    return {"status": "success", "action": request.action, "result": res}
 
 
 class MemoryUpdateRequest(BaseModel):
