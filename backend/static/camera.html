@@ -100,12 +100,8 @@
         const res = await fetch('/vision/analyze', { method: 'POST', body: formData });
         const data = await res.json();
         if (data.status === 'success') {
-          statusText.textContent = 'Analysis Complete!';
+          statusText.textContent = 'Analysis Complete! Speaking over ESP32 Speaker...';
           diagOutput.textContent = data.analysis;
-          if (data.audio_url) {
-            const audio = new Audio(data.audio_url);
-            audio.play();
-          }
         } else {
           statusText.textContent = 'Analysis Failed';
           diagOutput.textContent = 'Failed to analyze image.';
