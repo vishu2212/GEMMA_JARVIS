@@ -94,15 +94,18 @@ async def stream_wav_to_esp32(wav_path: str, text_response: str = "Hardware Diag
             pcm_bytes = get_resampled_pcm16_bytes(wav_path, target_sr=16000, volume_multiplier=volume_multiplier)
             chunk_size = 2048
             for i in range(0, len(pcm_bytes), chunk_size):
+                if active_esp32_ws is None:
+                    break
                 chunk = pcm_bytes[i:i+chunk_size]
                 await active_esp32_ws.send_bytes(chunk)
                 await asyncio.sleep(0.05)
                 
             # 3. Send done JSON event to cleanly stop speaker driver when finished
-            await active_esp32_ws.send_json({"event": "done"})
-            logger.info("Successfully streamed synthesized speech audio to ESP32 speaker over WebSocket.")
+            if active_esp32_ws is not None:
+                await active_esp32_ws.send_json({"event": "done"})
+                logger.info("Successfully streamed synthesized speech audio to ESP32 speaker over WebSocket.")
         except Exception as e:
-            logger.error(f"Error streaming audio to ESP32: {e}")
+            logger.warning(f"ESP32 audio streaming interrupted: {e}")
             active_esp32_ws = None
 
 def handle_volume_change(user_prompt: str) -> str:
