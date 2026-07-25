@@ -238,67 +238,102 @@
         <!-- Pipeline steps -->
         <div class="pipeline">
 
-          <div class="pipe-step step-done" id="ps-vision">
+        <!-- Animated 6-Stage AI Brain Pipeline -->
+        <div class="pipeline">
+
+          <!-- 1. Vision Capture -->
+          <div class="pipe-step step-idle" id="ps-vision">
             <div class="pipe-icon">📷</div>
             <div class="pipe-body">
               <div class="pipe-name">
-                Vision Capture
-                <span class="pipe-check ok" id="pc-vision">✓</span>
+                1. Vision Frame Capture
+                <span class="pipe-check pend" id="pc-vision">○</span>
               </div>
-              <div class="pipe-sub">Mobile camera → JPEG frame</div>
-              <div class="pipe-time done" id="pt-vision">165ms</div>
+              <div class="pipe-sub">Mobile camera stream → 1280x720 JPEG</div>
+              <div class="pipe-bar"><div class="pipe-fill" id="pf-vision"></div></div>
             </div>
           </div>
 
+          <!-- 2. AR Component Detection -->
+          <div class="pipe-step step-idle" id="ps-detect">
+            <div class="pipe-icon">🎯</div>
+            <div class="pipe-body">
+              <div class="pipe-name">
+                2. AR Component Detection
+                <span class="pipe-check pend" id="pc-detect">○</span>
+              </div>
+              <div class="pipe-sub">ESP32-S3, OLED, Mic, DAC Bounding Boxes</div>
+              <div class="pipe-bar"><div class="pipe-fill" id="pf-detect"></div></div>
+            </div>
+          </div>
+
+          <!-- 3. RAG Search -->
           <div class="pipe-step step-idle" id="ps-rag">
             <div class="pipe-icon">📄</div>
             <div class="pipe-body">
               <div class="pipe-name">
-                RAG Retrieval
+                3. RAG Datasheet Retrieval
                 <span class="pipe-check pend" id="pc-rag">○</span>
               </div>
-              <div class="pipe-sub">Datasheet context injection</div>
-              <div class="pipe-time idle" id="pt-rag">—</div>
+              <div class="pipe-sub">Vector search over pinout &amp; timing specs</div>
+              <div class="pipe-bar"><div class="pipe-fill" id="pf-rag"></div></div>
             </div>
           </div>
 
+          <!-- 4. Gemma 4 Multimodal -->
           <div class="pipe-step step-idle" id="ps-gemma">
             <div class="pipe-icon">🧠</div>
             <div class="pipe-body">
               <div class="pipe-name">
-                Gemma 4 Multimodal
+                4. Gemma 4 Reasoning
                 <span class="pipe-check pend" id="pc-gemma">○</span>
               </div>
-              <div class="pipe-sub">gemma-4-31b-it · Vision + Reasoning</div>
-              <div class="pipe-time idle" id="pt-gemma">—</div>
+              <div class="pipe-sub">gemma-4-31b-it · Hardware Diagnostic</div>
+              <div class="pipe-bar"><div class="pipe-fill" id="pf-gemma"></div></div>
             </div>
           </div>
 
-          <div class="pipe-step step-idle" id="ps-piper">
+          <!-- 5. Function Calling -->
+          <div class="pipe-step step-idle" id="ps-func">
+            <div class="pipe-icon">⚡</div>
+            <div class="pipe-body">
+              <div class="pipe-name">
+                5. Hardware Function Calling
+                <span class="pipe-check pend" id="pc-func">○</span>
+              </div>
+              <div class="pipe-sub">LED RGB shift, OLED update &amp; bus command</div>
+              <div class="pipe-bar"><div class="pipe-fill" id="pf-func"></div></div>
+            </div>
+          </div>
+
+          <!-- 6. Piper Neural Speech -->
+          <div class="pipe-step step-idle" id="ps-speech">
             <div class="pipe-icon">🎙️</div>
             <div class="pipe-body">
               <div class="pipe-name">
-                Piper Neural TTS
-                <span class="pipe-check pend" id="pc-piper">○</span>
+                6. Piper Speech Stream
+                <span class="pipe-check pend" id="pc-speech">○</span>
               </div>
-              <div class="pipe-sub">lessac · 16kHz PCM → WebSocket</div>
-              <div class="pipe-time idle" id="pt-piper">—</div>
-            </div>
-          </div>
-
-          <div class="pipe-step step-idle" id="ps-esp32">
-            <div class="pipe-icon">🔊</div>
-            <div class="pipe-body">
-              <div class="pipe-name">
-                ESP32 Speaker
-                <span class="pipe-check pend" id="pc-esp32">○</span>
-              </div>
-              <div class="pipe-sub">MAX98357A Class-D · 3.2W output</div>
-              <div class="pipe-time idle" id="pt-esp32">—</div>
+              <div class="pipe-sub">lessac · 16kHz PCM → ESP32 Speaker</div>
+              <div class="pipe-bar"><div class="pipe-fill" id="pf-speech"></div></div>
             </div>
           </div>
 
         </div><!-- /pipeline -->
+
+        <div class="brain-divider"></div>
+
+        <!-- Live AI Reasoning Log Card -->
+        <div style="background:var(--surface-1);border:1px solid var(--border);border-radius:var(--r-lg);padding:12px;display:flex;flex-direction:column;gap:8px;">
+          <div style="display:flex;align-items:center;justify-content:space-between;">
+            <span style="font-size:10px;font-weight:700;letter-spacing:0.08em;text-transform:uppercase;color:var(--cyan);">🧠 Live AI Reasoning Log</span>
+            <span class="badge badge-green" id="reasoning-status">READY</span>
+          </div>
+          <div id="live-reasoning-terminal" style="font-family:var(--mono);font-size:11px;color:var(--text-2);line-height:1.55;max-height:130px;overflow-y:auto;background:var(--surface-2);padding:8px 10px;border-radius:6px;border:1px solid var(--border);">
+            [00:00.0] System initialized. Awaiting circuit inspection trigger...<br>
+            [00:00.0] Ready for hardware diagnostics.
+          </div>
+        </div>
 
         <div class="brain-divider"></div>
 

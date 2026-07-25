@@ -608,6 +608,33 @@ a { color: inherit; text-decoration: none; }
   margin-top: 2px;
 }
 
+.pipe-bar {
+  width: 100%;
+  height: 4px;
+  background: var(--surface-2);
+  border-radius: 99px;
+  overflow: hidden;
+  margin-top: 6px;
+}
+
+.pipe-fill {
+  height: 100%;
+  width: 0%;
+  background: linear-gradient(90deg, #06B6D4, #10B981);
+  border-radius: 99px;
+  transition: width 0.3s ease;
+  box-shadow: 0 0 8px rgba(6, 182, 212, 0.4);
+}
+
+.pipe-step.step-active .pipe-fill {
+  animation: bar-glow 1s ease-in-out infinite alternate;
+}
+
+@keyframes bar-glow {
+  0% { filter: brightness(1); }
+  100% { filter: brightness(1.4); }
+}
+
 .pipe-time {
   font-size: 11px;
   font-family: var(--mono);
@@ -1153,4 +1180,94 @@ a { color: inherit; text-decoration: none; }
 @keyframes count-up {
   from { transform:scale(0.9); opacity:0.5; }
   to   { transform:scale(1); opacity:1; }
+}
+
+@keyframes pulse-dot {
+  0% { transform: scale(1); opacity: 1; }
+  50% { transform: scale(1.4); opacity: 0.5; }
+  100% { transform: scale(1); opacity: 1; }
+}
+
+/* Rich Structured Inspection Report Card */
+.rich-report-card {
+  background: var(--surface-1);
+  border: 1px solid var(--border-md);
+  border-radius: var(--r-xl);
+  padding: 14px 16px;
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  margin-top: 6px;
+  box-shadow: 0 4px 20px rgba(0,0,0,0.3);
+  animation: fade-in-up 0.25s ease;
+}
+
+.rich-report-hdr {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  border-bottom: 1px solid var(--border);
+  padding-bottom: 8px;
+}
+
+.rich-report-title {
+  font-size: 11px;
+  font-weight: 800;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  color: var(--cyan);
+}
+
+.rich-report-badge {
+  padding: 2px 8px;
+  border-radius: 99px;
+  font-size: 10px;
+  font-weight: 800;
+  background: var(--green-10);
+  color: var(--green);
+  border: 1px solid var(--green-20);
+}
+
+.rich-report-score {
+  font-size: 11px;
+  font-weight: 700;
+  font-family: var(--mono);
+  color: var(--green);
+}
+
+.rich-report-section {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+
+.rich-report-sec-title {
+  font-size: 9.5px;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.08em;
+  color: var(--text-3);
+  margin-bottom: 2px;
+}
+
+.rich-report-item {
+  font-size: 11.5px;
+  color: var(--text-2);
+  display: flex;
+  align-items: center;
+  gap: 6px;
+}
+
+.rich-report-item strong {
+  color: var(--text-1);
+}
+
+.rich-report-action {
+  font-size: 11px;
+  color: var(--green);
+  background: var(--green-10);
+  border: 1px solid var(--green-20);
+  padding: 6px 10px;
+  border-radius: 6px;
+  line-height: 1.4;
 }
