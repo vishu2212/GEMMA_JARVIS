@@ -37,7 +37,7 @@ That is exactly why **JARVIS** was created!
 
 JARVIS splits the workload smartly between two partners:
 1. **The Satellite (Hardware Client):** A lightweight, low-cost ESP32-S3 microcontroller placed on your desk. It acts as the "ears, mouth, and eyes" of the assistant — capturing your voice via an INMP441 I2S mic, giving visual feedback on a tiny OLED screen, and speaking back through a clear I2S DAC speaker.
-2. **The Brain (Local PC Server):** A Python FastAPI server that runs locally on your PC. It takes raw digital audio over WebSockets, transcribes it in real-time with **Faster-Whisper**, thinks using **Qwen 2.5** (via LM Studio), and speaks back using human-sounding neural voices with **Piper TTS**.
+2. **The Brain (Local PC Server):** A Python FastAPI server that runs locally on your PC. It takes raw digital audio over WebSockets, transcribes it in real-time with **Faster-Whisper**, reasons using **Gemma 4 (Google AI Studio)** as an embedded engineering copilot, and speaks back using human-sounding neural voices with **Piper TTS**.
 
 Whether you want a desk companion, a home automation trigger, or a voice interface for a robotics project, JARVIS gives you 100% control over every single line of code and piece of hardware.
 
@@ -58,7 +58,7 @@ graph TD
     subgraph Brain ["Local PC Brain (The AI Engine)"]
         B <-->|Full-Duplex WebSockets| E["FastAPI Server Controller"]
         E -->|WAV Audio Chunk| F["⚡ Faster-Whisper STT"]
-        F -->|Transcribed Text| G["🧠 Qwen 2.5 Instruct LLM"]
+        F -->|Transcribed Text| G["🧠 Gemma 4 API (Google AI Studio)"]
         G -->|Assistant Response| H["🎙️ Piper Neural TTS"]
         H -->|PCM Audio Payload| I["🔊 Sound Resampler & DSP"]
         I -->|Synthesized PCM Stream| E
@@ -106,9 +106,9 @@ Here is the exact pin configuration used to wire the JARVIS satellite to an **ES
 
 - **Firmware:** ESP-IDF v5.5.4 (C/C++), FreeRTOS kernel, `esp_websocket_client`, U8g2 OLED drivers.
 - **Backend Framework:** Python 3.13, FastAPI, Uvicorn ASGI server, WebSockets.
-- **AI Models:**
+- **AI Models & API:**
   - **Speech-to-Text (STT):** `faster-whisper` (CTranslate2 implementation of OpenAI Whisper).
-  - **Large Language Model (LLM):** `Qwen 2.5 7B Instruct` hosted locally via [LM Studio](https://lmstudio.ai/).
+  - **Large Language Model (LLM):** `Gemma 4` (`gemma-4-31b-it`) hosted via [Google AI Studio API](https://aistudio.google.com/).
   - **Text-to-Speech (TTS):** `piper-tts` ONNX local engine.
 
 ---
@@ -119,8 +119,8 @@ Here is the exact pin configuration used to wire the JARVIS satellite to an **ES
 
 1. Clone this repository:
    ```bash
-   git clone https://github.com/vishu2212/jarvis-ai-assistant.git
-   cd jarvis-ai-assistant/backend
+   git clone https://github.com/vishu2212/GEMMA_JARVIS.git
+   cd GEMMA_JARVIS/backend
    ```
 2. Create and activate a Python virtual environment:
    ```bash
@@ -132,9 +132,12 @@ Here is the exact pin configuration used to wire the JARVIS satellite to an **ES
    ```
 3. Install dependencies:
    ```bash
-   pip install -r requirements.txt
+   pip install -r requirements.txt google-genai python-dotenv
    ```
-4. Start **LM Studio**, download `qwen2.5-7b-instruct`, and start the local server on port `1234`.
+4. Set your Google AI Studio API Key in `.env`:
+   ```bash
+   GEMMA_API_KEY=YOUR_GEMMA_API_KEY
+   ```
 5. Run the FastAPI backend:
    ```bash
    python server.py
@@ -166,7 +169,7 @@ Here is the exact pin configuration used to wire the JARVIS satellite to an **ES
 3. **Ask a Question:**
    - **Hands-Free:** Say *"Hey Jarvis"* to trigger listening mode.
    - **Manual:** Press and hold the physical **BOOT button (GPIO 0)** while speaking, then release when finished.
-4. **Watch JARVIS Think & Speak:** JARVIS will show `Thinking...` while analyzing your query, then scroll the answer on screen while speaking out loud through the speaker!
+4. **Watch JARVIS Think & Speak:** JARVIS will show `Reasoning with Gemma 4...` while analyzing your query, then scroll the answer on screen while speaking out loud through the speaker!
 
 ---
 
@@ -183,4 +186,4 @@ Here is the exact pin configuration used to wire the JARVIS satellite to an **ES
 
 Distributed under the **MIT License**. See [`LICENSE`](LICENSE) for more details.
 
-Built with ❤️ using ESP32-S3, FastAPI, Whisper, Qwen, and Piper TTS.
+Built with ❤️ using ESP32-S3, FastAPI, Whisper, Gemma 4, and Piper TTS.

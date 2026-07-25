@@ -353,6 +353,7 @@ async def process_and_respond(audio_chunks, websocket: WebSocket, session_id: st
             await websocket.send_json({"event": "error", "message": "STT not available"})
             return
             
+        await websocket.send_json({"event": "transcribing", "status": "Transcribing audio with Faster-Whisper..."})
         user_prompt = whisper_service.transcribe(input_wav_path)
         logger.info(f"WS Transcribed: '{user_prompt}'")
         
@@ -383,17 +384,20 @@ async def process_and_respond(audio_chunks, websocket: WebSocket, session_id: st
         if system_vol_msg:
             messages_to_send.append({"role": "system", "content": system_vol_msg})
             
+        await websocket.send_json({"event": "reasoning", "status": "Reasoning with Gemma 4 (Google AI Studio)...", "model": settings.GEMMA_MODEL})
         assistant_reply = await llm_service.get_response(messages_to_send)
         if not assistant_reply:
             assistant_reply = "I'm sorry, I couldn't generate a reply. Please try again."
-        logger.info(f"WS LLM Reply: '{assistant_reply}'")
+        logger.info(f"WS Gemma Reply: '{assistant_reply}'")
         conversation_service.add_message(session_id, "assistant", assistant_reply)
         
+        await websocket.send_json({"event": "generating_tts", "status": "Generating speech with Piper TTS..."})
         output_wav_path = await tts_service.speak(assistant_reply)
         pcm_bytes = get_resampled_pcm16_bytes(output_wav_path, target_sr=16000, volume_multiplier=volume_multiplier)
         
         await websocket.send_json({
             "event": "speaking",
+            "status": "Speaking to ESP32 Speaker...",
             "transcript": user_prompt,
             "response": assistant_reply
         })

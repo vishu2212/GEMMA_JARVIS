@@ -32,10 +32,10 @@
 
 // Wi-Fi Connections
 // Wi-Fi Connections
-#define WIFI_SSID "Lucifer " // Update to your 2.4GHz Wi-Fi name (case-sensitive)
-#define WIFI_PASS "12345678"
-#define BACKEND_BASE_URL "http://10.170.183.164:8001"     // Updated to new IP
-#define BACKEND_WS_URL "ws://10.170.183.164:8001/ws/chat" // Updated to new IP
+#define WIFI_SSID "Vishu" // Update to your 2.4GHz Wi-Fi name (case-sensitive)
+#define WIFI_PASS "Phalswal@dce"
+#define BACKEND_BASE_URL "http://192.168.1.111:8001"
+#define BACKEND_WS_URL "ws://192.168.1.111:8001/ws/chat"
 // Audio Buffer
 #define RECORD_DURATION_SEC 5
 #define RECORD_BUFFER_SIZE (SAMPLE_RATE * 2 * RECORD_DURATION_SEC) // 160,000 Bytes

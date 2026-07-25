@@ -1,80 +1,75 @@
 from typing import List, Dict
-import httpx
+import os
+from google import genai
 from config import settings
 from utils.logger import logger
 
 class LLMService:
-    """Service to handle interactions with the local LM Studio instance."""
+    """Service to handle interactions with Gemma API (Google AI Studio)."""
     
     def __init__(self) -> None:
-        self.base_url = settings.LM_STUDIO_URL.rstrip("/")
-        self.completions_url = f"{self.base_url}/chat/completions"
-        self.models_url = f"{self.base_url}/models"
-        self.model = settings.LM_STUDIO_MODEL
+        self.api_key = settings.GEMMA_API_KEY or os.getenv("GEMMA_API_KEY", "")
+        self.model = settings.GEMMA_MODEL
         self.timeout = settings.TIMEOUT_LLM
-        logger.info(f"Initialized LLMService (Endpoint: {self.completions_url}, Model: {self.model})")
+        
+        if self.api_key:
+            self.client = genai.Client(api_key=self.api_key)
+            logger.info(f"Initialized LLMService with Google GenAI Gemma API (Model: {self.model})")
+        else:
+            self.client = None
+            logger.warning("LLMService initialized without GEMMA_API_KEY. Please set GEMMA_API_KEY in backend/.env")
 
     async def get_response(self, messages: List[Dict[str, str]]) -> str:
-        """Sends the message history to LM Studio and returns the LLM response text."""
-        payload = {
-            "model": self.model,
-            "messages": messages,
-            "temperature": 0.7,
-            "max_tokens": 200
-        }
+        """Sends message history to Gemma 4 API (Google AI Studio) and returns response text."""
+        if not self.client:
+            self.api_key = os.getenv("GEMMA_API_KEY", "")
+            if not self.api_key:
+                raise RuntimeError("GEMMA_API_KEY is not configured in backend/.env")
+            self.client = genai.Client(api_key=self.api_key)
+
+        # Build prompt from conversation messages
+        prompt_parts = []
+        for msg in messages:
+            role = msg.get("role", "user")
+            content = msg.get("content", "")
+            if role == "system":
+                prompt_parts.append(f"System: {content}")
+            elif role == "user":
+                prompt_parts.append(f"User: {content}")
+            elif role == "assistant":
+                prompt_parts.append(f"Assistant: {content}")
         
-        logger.info(f"Sending LLM chat completion request to LM Studio")
+        prompt_parts.append("Assistant: ")
+        full_prompt = "\n\n".join(prompt_parts)
+
+        logger.info(f"Sending prompt to Gemma API (Model: {self.model})")
         try:
-            async with httpx.AsyncClient() as client:
-                response = await client.post(
-                    self.completions_url,
-                    json=payload,
-                    headers={"Content-Type": "application/json"},
-                    timeout=self.timeout
-                )
+            response = self.client.models.generate_content(
+                model=self.model,
+                contents=full_prompt
+            )
+            
+            if not response or not response.text:
+                logger.error("Empty response received from Gemma API")
+                raise RuntimeError("Empty response received from Gemma API")
                 
-                if response.status_code != 200:
-                    logger.error(f"LM Studio returned error {response.status_code}: {response.text}")
-                    raise httpx.HTTPStatusError(
-                        f"LM Studio API returned status code {response.status_code}",
-                        request=response.request,
-                        response=response
-                    )
-                
-                data = response.json()
-                reply = data["choices"][0]["message"]["content"].strip()
-                logger.info("Successfully received chat completion from LM Studio.")
-                return reply
-        except httpx.RequestError as e:
-            logger.error(f"Failed to communicate with LM Studio: {e}", exc_info=True)
-            raise RuntimeError(f"Connection to LM Studio failed: {e}")
-        except KeyError as e:
-            logger.error(f"Invalid JSON response structure from LM Studio: {e}", exc_info=True)
-            raise RuntimeError(f"Invalid format returned from LM Studio: {e}")
+            reply = response.text.strip()
+            logger.info("Successfully received response from Gemma API.")
+            return reply
+
         except Exception as e:
-            logger.error(f"Unexpected error in LLMService: {e}", exc_info=True)
-            raise e
+            logger.error(f"Error calling Gemma API: {e}", exc_info=True)
+            raise RuntimeError(f"Gemma API call failed: {e}")
 
     async def get_available_models(self) -> List[str]:
-        """Queries the LM Studio API and returns a list of available models."""
-        logger.info(f"Querying available models from {self.models_url}")
+        """Queries Google GenAI API and returns available models."""
+        logger.info("Querying available models from Google GenAI API")
         try:
-            async with httpx.AsyncClient() as client:
-                response = await client.get(self.models_url, timeout=10.0)
-                
-                if response.status_code != 200:
-                    logger.error(f"LM Studio returned status {response.status_code} for models endpoint")
-                    raise httpx.HTTPStatusError(
-                        f"Models API returned status code {response.status_code}",
-                        request=response.request,
-                        response=response
-                    )
-                
-                data = response.json()
-                # Extract model IDs
-                models = [m["id"] for m in data.get("data", [])]
-                logger.info(f"Models retrieved: {models}")
-                return models
+            if not self.client:
+                return [self.model]
+            models = [m.name.replace("models/", "") for m in self.client.models.list()]
+            logger.info(f"Retrieved models: {models}")
+            return models
         except Exception as e:
-            logger.error(f"Failed to fetch models from LM Studio: {e}", exc_info=True)
-            raise RuntimeError(f"Failed to retrieve models: {e}")
+            logger.error(f"Failed to fetch models from Gemma API: {e}", exc_info=True)
+            return [self.model]

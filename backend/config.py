@@ -1,7 +1,12 @@
 import os
 import sys
 from pathlib import Path
+from dotenv import load_dotenv
 from pydantic import BaseModel, Field
+
+# Load environment variables from .env file in backend directory
+_backend_dir = Path(__file__).resolve().parent
+load_dotenv(_backend_dir / ".env")
 
 # Dynamically inject Nvidia CUDA runtime DLL folders to the search path for Windows platforms.
 # This prevents ctranslate2/faster-whisper from failing due to missing system CUDA DLLs.
@@ -37,7 +42,17 @@ class Settings(BaseModel):
     KNOWLEDGE_DOCS_DIR: Path = BASE_DIR / "knowledge_documents"
     COMPILED_KNOWLEDGE_PATH: Path = TEMP_DIR / "compiled_knowledge.txt"
     
-    # LM Studio Settings
+    # Gemma API Settings
+    GEMMA_API_KEY: str = Field(
+        default_factory=lambda: os.getenv("GEMMA_API_KEY", ""),
+        description="Google AI Studio API Key for Gemma"
+    )
+    GEMMA_MODEL: str = Field(
+        default="gemma-4-31b-it",
+        description="Gemma model identifier in Google AI Studio"
+    )
+    
+    # LM Studio Settings (Legacy / Local Fallback)
     LM_STUDIO_URL: str = Field(
         default="http://127.0.0.1:1234/v1", 
         description="Base URL for LM Studio API"
