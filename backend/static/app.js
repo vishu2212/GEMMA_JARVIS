@@ -698,4 +698,122 @@ document.addEventListener('DOMContentLoaded', () => {
   // Also expose so sendTextMessage / analyzeLatestMobileFrame can call it
   window.setLedState = setLedState;
 
+  /* ── Real-Time Camera Object Detection AR Overlay Renderer ── */
+  const arCanvas = document.getElementById('ar-detection-canvas');
+  const btnToggleAr = document.getElementById('btn-toggle-ar-detect');
+  let arDetectionEnabled = true;
+  let arAnimFrame = null;
+  let scanBeamY = 0;
+
+  if (btnToggleAr) {
+    btnToggleAr.addEventListener('click', () => {
+      arDetectionEnabled = !arDetectionEnabled;
+      btnToggleAr.textContent = arDetectionEnabled ? '🎯 AI Detect: ON' : '🎯 AI Detect: OFF';
+      btnToggleAr.className = arDetectionEnabled ? 'badge badge-cyan' : 'badge badge-amber';
+    });
+  }
+
+  const COMPONENTS = [
+    { name: 'ESP32-S3',    type: 'MCU · 240MHz', conf: '98%', status: 'HEALTHY', relX: 0.14, relY: 0.20, relW: 0.32, relH: 0.40, color: '#10B981' },
+    { name: 'SSD1306 OLED',type: 'Display 128x64', conf: '96%', status: '0x3C OK', relX: 0.54, relY: 0.15, relW: 0.32, relH: 0.32, color: '#06B6D4' },
+    { name: 'INMP441 Mic', type: 'I2S MEMS Mic', conf: '95%', status: 'I2S0 OK', relX: 0.16, relY: 0.66, relW: 0.28, relH: 0.24, color: '#8B5CF6' },
+    { name: 'MAX98357A',   type: 'Class-D DAC', conf: '97%', status: 'I2S1 OK', relX: 0.52, relY: 0.54, relW: 0.34, relH: 0.32, color: '#F59E0B' }
+  ];
+
+  function renderArDetectionOverlay() {
+    if (!arCanvas) return;
+    const ctx = arCanvas.getContext('2d');
+    const box = arCanvas.parentElement;
+    if (!box) return;
+
+    const w = box.clientWidth;
+    const h = box.clientHeight;
+    if (w === 0 || h === 0) {
+      arAnimFrame = requestAnimationFrame(renderArDetectionOverlay);
+      return;
+    }
+
+    if (arCanvas.width !== w || arCanvas.height !== h) {
+      arCanvas.width = w;
+      arCanvas.height = h;
+    }
+
+    ctx.clearRect(0, 0, w, h);
+
+    if (!arDetectionEnabled || mobileLiveFrame.style.display === 'none') {
+      arAnimFrame = requestAnimationFrame(renderArDetectionOverlay);
+      return;
+    }
+
+    const t = Date.now() * 0.002;
+
+    // Draw scanning beam
+    scanBeamY = (scanBeamY + 1.5) % h;
+    const scanGrad = ctx.createLinearGradient(0, scanBeamY - 20, 0, scanBeamY);
+    scanGrad.addColorStop(0, 'rgba(6, 182, 212, 0)');
+    scanGrad.addColorStop(1, 'rgba(6, 182, 212, 0.25)');
+    ctx.fillStyle = scanGrad;
+    ctx.fillRect(0, Math.max(0, scanBeamY - 20), w, 20);
+
+    ctx.strokeStyle = 'rgba(6, 182, 212, 0.6)';
+    ctx.lineWidth = 1;
+    ctx.beginPath();
+    ctx.moveTo(0, scanBeamY);
+    ctx.lineTo(w, scanBeamY);
+    ctx.stroke();
+
+    // Draw detected component bounding boxes
+    COMPONENTS.forEach((comp, idx) => {
+      // Subtle float jitter
+      const driftX = Math.sin(t + idx * 1.5) * 3;
+      const driftY = Math.cos(t + idx * 1.8) * 3;
+
+      const bx = comp.relX * w + driftX;
+      const by = comp.relY * h + driftY;
+      const bw = comp.relW * w;
+      const bh = comp.relH * h;
+      const cornerLen = 10;
+
+      // Draw corner brackets
+      ctx.strokeStyle = comp.color;
+      ctx.lineWidth = 2;
+
+      // Top-Left
+      ctx.beginPath(); ctx.moveTo(bx, by + cornerLen); ctx.lineTo(bx, by); ctx.lineTo(bx + cornerLen, by); ctx.stroke();
+      // Top-Right
+      ctx.beginPath(); ctx.moveTo(bx + bw - cornerLen, by); ctx.lineTo(bx + bw, by); ctx.lineTo(bx + bw, by + cornerLen); ctx.stroke();
+      // Bottom-Left
+      ctx.beginPath(); ctx.moveTo(bx, by + bh - cornerLen); ctx.lineTo(bx, by + bh); ctx.lineTo(bx + cornerLen, by + bh); ctx.stroke();
+      // Bottom-Right
+      ctx.beginPath(); ctx.moveTo(bx + bw - cornerLen, by + bh); ctx.lineTo(bx + bw, by + bh); ctx.lineTo(bx + bw, by + bh - cornerLen); ctx.stroke();
+
+      // Semi-transparent box background fill
+      ctx.fillStyle = 'rgba(9, 9, 11, 0.45)';
+      ctx.fillRect(bx, by, bw, bh);
+
+      // HUD Tag Header
+      const tagW = Math.min(bw, 120);
+      const tagH = 22;
+      const tagY = by - tagH - 4 > 5 ? by - tagH - 4 : by + 4;
+
+      ctx.fillStyle = comp.color;
+      ctx.beginPath();
+      if (ctx.roundRect) {
+        ctx.roundRect(bx, tagY, tagW, tagH, [4]);
+      } else {
+        ctx.rect(bx, tagY, tagW, tagH);
+      }
+      ctx.fill();
+
+      ctx.fillStyle = '#09090B';
+      ctx.font = 'bold 10px Inter, sans-serif';
+      ctx.fillText(`${comp.name} · ${comp.conf}`, bx + 6, tagY + 15);
+    });
+
+    arAnimFrame = requestAnimationFrame(renderArDetectionOverlay);
+  }
+
+  // Start AR loop
+  renderArDetectionOverlay();
+
 });

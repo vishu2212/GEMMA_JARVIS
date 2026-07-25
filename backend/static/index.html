@@ -62,7 +62,10 @@
     <section class="panel" id="panel-vision">
       <div class="panel-hdr">
         <span class="panel-label">📷 Live Vision</span>
-        <span class="badge badge-green" id="badge-frame-age">Waiting for camera…</span>
+        <div style="display:flex;gap:5px;align-items:center;">
+          <span class="badge badge-cyan" id="btn-toggle-ar-detect" style="cursor:pointer;" title="Toggle Real-Time Component Detection Overlay">🎯 AI Detect: ON</span>
+          <span class="badge badge-green" id="badge-frame-age">Waiting for camera…</span>
+        </div>
       </div>
 
       <div class="panel-scroll">
@@ -70,6 +73,7 @@
         <!-- Camera Feed -->
         <div class="cam-box">
           <img id="mobile-live-frame" alt="Live camera feed" />
+          <canvas id="ar-detection-canvas"></canvas>
 
           <!-- Empty state -->
           <div class="cam-empty" id="cam-empty">
