@@ -1,0 +1,49 @@
+ESP-IDF V5.X I2S DRIVER PROGRAMMING & FREERTOS GUIDE
+
+1. ESP-IDF V5 I2S DRIVER OVERVIEW
+In ESP-IDF v5.0 and later versions, the legacy I2S driver API (`i2s_driver_install`, `i2s_write`, `i2s_read`) has been replaced by the dedicated I2S Channel Driver API (`driver/i2s_std.h`, `driver/i2s_pdm.h`).
+
+2. CREATING I2S RX CHANNEL (MICROPHONE INPUT)
+```c
+i2s_chan_handle_t rx_handle;
+i2s_chan_config_t chan_cfg = I2S_CHANNEL_DEFAULT_CONFIG(I2S_NUM_0, I2S_ROLE_MASTER);
+i2s_new_channel(&chan_cfg, NULL, &rx_handle);
+
+i2s_std_config_t std_cfg = {
+    .clk_cfg = I2S_STD_CLK_DEFAULT_CONFIG(16000), // 16kHz sample rate for speech
+    .slot_cfg = I2S_STD_PHILIPS_SLOT_DEFAULT_CONFIG(I2S_DATA_BIT_WIDTH_32BIT, I2S_SLOT_MODE_MONO),
+    .gpio_cfg = {
+        .mclk = I2S_GPIO_UNUSED,
+        .bclk = GPIO_NUM_41,
+        .ws = GPIO_NUM_42,
+        .din = GPIO_NUM_4,
+        .dout = I2S_GPIO_UNUSED,
+    },
+};
+i2s_channel_init_std_mode(rx_handle, &std_cfg);
+i2s_channel_enable(rx_handle);
+```
+
+3. CREATING I2S TX CHANNEL (SPEAKER OUTPUT)
+```c
+i2s_chan_handle_t tx_handle;
+i2s_chan_config_t tx_chan_cfg = I2S_CHANNEL_DEFAULT_CONFIG(I2S_NUM_1, I2S_ROLE_MASTER);
+i2s_new_channel(&tx_chan_cfg, &tx_handle, NULL);
+
+i2s_std_config_t tx_std_cfg = {
+    .clk_cfg = I2S_STD_CLK_DEFAULT_CONFIG(16000),
+    .slot_cfg = I2S_STD_MSB_SLOT_DEFAULT_CONFIG(I2S_DATA_BIT_WIDTH_16BIT, I2S_SLOT_MODE_MONO),
+    .gpio_cfg = {
+        .mclk = I2S_GPIO_UNUSED,
+        .bclk = GPIO_NUM_5,
+        .ws = GPIO_NUM_6,
+        .dout = GPIO_NUM_7,
+        .din = I2S_GPIO_UNUSED,
+    },
+};
+i2s_channel_init_std_mode(tx_handle, &tx_std_cfg);
+i2s_channel_enable(tx_handle);
+```
+
+4. FREERTOS DMA RING BUFFER QUEUE & TIMING
+When reading audio PCM data from `rx_handle` or writing to `tx_handle`, always use FreeRTOS `vTaskDelay` or non-blocking ring buffer tasks to prevent watchdog timer (WDT) triggers. The recommended DMA buffer length is 8 buffers of 512 bytes each.

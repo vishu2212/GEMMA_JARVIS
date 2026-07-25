@@ -21,10 +21,12 @@ from services.tts_service import TTSService
 from services.audio_service import AudioService
 from services.conversation_service import ConversationService
 from services.vision_service import VisionService
+from services.rag_service import RAGService
 
 router = APIRouter(tags=["Chat & Audio Services"])
 
 # Initialize services (lazy-wrapped or fallback handled)
+rag_service = RAGService()
 whisper_service: Optional[WhisperService] = None
 try:
     whisper_service = WhisperService()
@@ -286,17 +288,25 @@ class ChatTextRequest(BaseModel):
 
 class ChatTextResponse(BaseModel):
     response: str
+    citations: Optional[List[dict]] = None
     latency: Optional[dict] = None
 
 
 @router.post("/chat/text", response_model=ChatTextResponse)
 async def post_chat_text(request: ChatTextRequest):
-    """Processes text chat input -> queries LM Studio -> returns text response."""
+    """Processes text chat input -> queries RAG datasheets -> queries LM Studio -> returns text response with citations."""
     start_total = time.perf_counter()
     try:
+        # Search RAG datasheets for authoritative context
+        rag_context, citations = rag_service.search_datasheets(request.text)
+
         conversation_service.add_message(request.session_id, "user", request.text)
         history = conversation_service.get_history(request.session_id)
         system_prompt = conversation_service.get_system_prompt(request.text)
+
+        if rag_context:
+            system_prompt += f"\n\n{rag_context}"
+
         messages_to_send = [{"role": "system", "content": system_prompt}] + history
         
         start_llm = time.perf_counter()
@@ -314,7 +324,7 @@ async def post_chat_text(request: ChatTextRequest):
         }
         logger.info(f"Text Latency Profile:\n{json.dumps(latency, indent=2)}")
         
-        return ChatTextResponse(response=reply, latency=latency)
+        return ChatTextResponse(response=reply, citations=citations, latency=latency)
     except Exception as e:
         logger.error(f"Error in /chat/text: {e}", exc_info=True)
         raise HTTPException(status_code=500, detail=str(e))
@@ -799,4 +809,30 @@ async def websocket_chat_endpoint(websocket: WebSocket):
             logger.error("Traceback of RuntimeError:", exc_info=True)
         else:
             logger.error(f"WS Error: {e}", exc_info=True)
+
+
+@router.get("/docs/list")
+async def get_docs_list():
+    """Gets list of all indexed datasheets in RAG memory."""
+    docs = rag_service.get_document_list()
+    return {"status": "success", "documents": docs}
+
+
+@router.post("/docs/upload")
+async def post_docs_upload(file: UploadFile = File(...)):
+    """Uploads a new engineering datasheet or reference spec (.txt, .md) to RAG memory."""
+    if not file.filename.endswith(('.txt', '.md')):
+        raise HTTPException(status_code=400, detail="Only .txt and .md engineering datasheets are supported.")
+    
+    save_path = rag_service.docs_dir / file.filename
+    content = await file.read()
+    with open(save_path, "wb") as f:
+        f.write(content)
+    
+    rag_service.index_documents()
+    return {
+        "status": "success",
+        "message": f"Successfully indexed datasheet '{file.filename}' into RAG memory.",
+        "documents": rag_service.get_document_list()
+    }
 

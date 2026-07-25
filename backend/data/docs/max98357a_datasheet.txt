@@ -1,0 +1,29 @@
+MAX98357A I2S CLASS-D AUDIO AMPLIFIER DATASHEET
+
+1. GENERAL DESCRIPTION
+The MAX98357A is a digital pulse-code modulation (PCM) input Class-D power amplifier that provides premium audio performance. It takes standard I2S digital audio data directly from a microcontroller or DSP (such as ESP32-S3) and drives a 4-ohm or 8-ohm speaker without requiring an external digital-to-analog converter (DAC).
+
+2. ELECTRICAL SPECIFICATIONS
+- Output Power: 3.2 W into 4 Ohm load at 5V supply (10% THD+N); 1.8 W into 8 Ohm load at 5V supply
+- Supply Voltage Range (VDD): 2.5 V to 5.5 V (Recommended 5V rail for maximum speaker volume)
+- I2S Sample Rates Supported: 8 kHz, 11.025 kHz, 16 kHz, 22.05 kHz, 32 kHz, 44.1 kHz, 48 kHz, 88.2 kHz, and 96 kHz
+- Maximum I2S Sample Rate: 96 kHz
+- Dynamic Range: 92 dBA
+- Total Harmonic Distortion + Noise (THD+N): 0.015% at 1 kHz
+
+3. PIN FUNCTIONS & HARDWARE CONNECTIONS
+- VDD: Power Supply (Connect to 5V power rail for maximum 3.2W output, or 3.3V rail)
+- GND: System Ground (Connect to system GND)
+- DIN (Data In): Serial I2S Data Input (Connect to ESP32 GPIO 7)
+- BCLK (Bit Clock): Serial Bit Clock Input (Connect to ESP32 GPIO 5)
+- LRC (Left/Right Clock / WS): Word Select Clock Input (Connect to ESP32 GPIO 6)
+- GAIN: Gain Selection Pin. 
+  * Unconnected (float): +9 dB gain
+  * Connect to GND via 100k Ohm resistor: +3 dB gain
+  * Connect to GND directly: +6 dB gain
+  * Connect to VDD directly: +12 dB gain
+  * Connect to VDD via 100k Ohm resistor: +15 dB gain
+- SD_MODE (Shutdown / Mode Select): Pull to GND for shutdown mode (0.6 uA standby current). Connect to VDD for Left channel or Right/Left mono mix.
+
+4. AUTOMATIC CLOCK DETECTION
+The MAX98357A features automatic sample rate and bit clock detection. It automatically configures internal PLL clock multipliers based on the incoming BCLK and LRC clock signals supplied by the ESP32 I2S master interface. No external MCLK (Master Clock) is required.

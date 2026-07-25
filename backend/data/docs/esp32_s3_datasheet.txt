@@ -1,0 +1,24 @@
+ESP32-S3 SYSTEM & PERIPHERAL TECHNICAL REFERENCE MANUAL
+
+1. HARDWARE SPECIFICATIONS
+The ESP32-S3 is a dual-core Xtensa LX7 microcontroller operating at up to 240 MHz. It features integrated 2.4 GHz Wi-Fi (802.11 b/g/n) and Bluetooth 5 (LE), 512 KB internal SRAM, vector instructions for AI acceleration, and 45 programmable GPIO pins.
+
+2. I2S PERIPHERAL ARCHITECTURE
+The ESP32-S3 contains two independent I2S (Inter-IC Sound) hardware controllers: I2S0 and I2S1.
+- Operating Modes: Master mode or Slave mode
+- Supported Formats: Philips I2S standard, MSB justified, PCM/DSP, PDM input/output
+- Bit Resolution: 8-bit, 16-bit, 24-bit, 32-bit audio samples
+- Maximum I2S Master Clock Output (MCLK): Up to 40 MHz
+- Recommended Pins for I2S0 (Microphone Input): GPIO 4 (SD), GPIO 41 (SCK), GPIO 42 (WS)
+- Recommended Pins for I2S1 (Speaker Output): GPIO 7 (DIN), GPIO 5 (BCLK), GPIO 6 (LRC)
+
+3. GPIO MATRIX AND PERIPHERAL MAPPING
+Any digital peripheral (I2S, SPI, UART, I2C) on the ESP32-S3 can be routed to any physical GPIO pin using the internal GPIO Matrix.
+- OLED Display (SSD1306 I2C): Default SDA on GPIO 8, SCL on GPIO 9 (I2C Address 0x3C or 0x3D)
+- BOOT Button: Connected to GPIO 0 with internal pull-up resistor. Low state (GND) indicates button press.
+
+4. POWER MANAGEMENT AND THERMAL OPERATING RANGE
+- Operating Voltage: 3.0 V to 3.6 V (Nominal 3.3V)
+- Deep Sleep Current: 7 uA
+- Wi-Fi Active Tx Peak Current: 240 mA to 355 mA
+- Operating Temperature Range: -40 °C to +105 °C

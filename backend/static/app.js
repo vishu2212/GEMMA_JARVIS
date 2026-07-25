@@ -212,7 +212,7 @@ document.addEventListener('DOMContentLoaded', () => {
 
       const data = await res.json();
       setPipelineStage('pipe-tts');
-      addChatMessage('JARVIS', data.response, 'bot-msg');
+      addChatMessage('JARVIS', data.response, 'bot-msg', data.citations);
 
       if (data.latency) {
         latLlm.textContent = (data.latency.llm_ms / 1000).toFixed(2) + 's';
@@ -298,16 +298,56 @@ document.addEventListener('DOMContentLoaded', () => {
     }
   });
 
+  // 7. Load & Upload RAG Engineering Datasheets
+  const docChipsList = document.getElementById('doc-chips-list');
+  const docUploadInput = document.getElementById('doc-upload-input');
+
+  async function fetchDocsList() {
+    try {
+      const res = await fetch('/docs/list');
+      if (res.ok) {
+        const data = await res.json();
+        if (data.documents && docChipsList) {
+          docChipsList.innerHTML = data.documents.map(d => `<span class="doc-chip">📄 ${d.doc_id}</span>`).join('');
+        }
+      }
+    } catch (e) {}
+  }
+  fetchDocsList();
+
+  if (docUploadInput) {
+    docUploadInput.addEventListener('change', async (e) => {
+      const file = e.target.files[0];
+      if (!file) return;
+      const formData = new FormData();
+      formData.append('file', file);
+      try {
+        const res = await fetch('/docs/upload', { method: 'POST', body: formData });
+        const data = await res.json();
+        if (data.status === 'success') {
+          fetchDocsList();
+          addChatMessage('JARVIS SYSTEM', `Successfully indexed datasheet '${file.name}' into RAG memory.`, 'system-msg');
+        }
+      } catch (err) {
+        console.error('Doc upload error:', err);
+      }
+    });
+  }
+
   // Volume Slider
   volSlider.addEventListener('input', (e) => {
     volVal.textContent = e.target.value + '%';
   });
 
   // Helper Utilities
-  function addChatMessage(sender, text, msgClass) {
+  function addChatMessage(sender, text, msgClass, citations = null) {
     const msgDiv = document.createElement('div');
     msgDiv.className = `msg ${msgClass}`;
-    msgDiv.innerHTML = `<div class="msg-sender">${sender}</div><div class="msg-content">${text}</div>`;
+    let citeHtml = '';
+    if (citations && citations.length > 0) {
+      citeHtml = citations.map(c => `<br/><span class="citation-tag">📄 Source: ${c.doc_id} (${c.title})</span>`).join(' ');
+    }
+    msgDiv.innerHTML = `<div class="msg-sender">${sender}</div><div class="msg-content">${text} ${citeHtml}</div>`;
     chatMessages.appendChild(msgDiv);
     chatMessages.scrollTop = chatMessages.scrollHeight;
   }

@@ -146,6 +146,21 @@
           <button id="btn-record-mic" class="btn btn-danger">🎤 Mic</button>
         </div>
 
+        <!-- Document-Aware Engineering Assistant (RAG Datasheets) -->
+        <div class="rag-docs-card">
+          <div class="rag-header">
+            <h3>📄 Engineering Datasheets & Specs (RAG)</h3>
+            <label for="doc-upload-input" class="btn btn-outline" style="cursor:pointer; font-size:0.75rem; padding:0.25rem 0.6rem;">📁 Upload Spec</label>
+            <input type="file" id="doc-upload-input" accept=".txt,.md" style="display:none;" />
+          </div>
+          <div class="doc-chips-list" id="doc-chips-list">
+            <span class="doc-chip">📄 inmp441_datasheet.txt</span>
+            <span class="doc-chip">📄 max98357a_datasheet.txt</span>
+            <span class="doc-chip">📄 esp32_s3_datasheet.txt</span>
+            <span class="doc-chip">📄 esp_idf_i2s_guide.txt</span>
+          </div>
+        </div>
+
         <!-- Latency Statistics Profile -->
         <div class="latency-bar" id="latency-bar">
           <span class="lat-tag">Frame Upload: <strong id="lat-upload">165 ms</strong></span>
