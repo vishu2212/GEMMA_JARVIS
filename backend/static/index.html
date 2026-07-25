@@ -3,468 +3,500 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-  <title>JARVIS Edge AI — Mobile Vision Copilot</title>
+  <title>JARVIS Edge AI — Embedded AI Engineering Copilot</title>
+  <meta name="description" content="AI-powered hardware inspection and voice engineering assistant for ESP32 embedded systems. Powered by Gemma 4 Multimodal.">
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-  <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;500;600;700;800&family=JetBrains+Mono:wght@400;500;600&display=swap" rel="stylesheet">
   <link rel="stylesheet" href="/static/styles.css">
-  <link rel="manifest" href="/static/manifest.json">
-  <meta name="theme-color" content="#0f172a">
 </head>
 <body>
-  <div class="app-container">
-    <!-- Header Navbar -->
-    <header class="navbar">
-      <div class="brand">
-        <div class="logo-icon">🤖</div>
-        <div class="brand-text">
-          <h1>JARVIS <span>MOBILE AI VISION</span></h1>
-          <p class="subtitle">Embedded AI Engineering Copilot • Gemma 4 Multimodal</p>
-        </div>
-      </div>
-      <div class="status-pills">
-        <div class="pill" id="pill-esp32"><span class="dot green"></span> ESP32: <strong id="status-esp32">Connecting...</strong></div>
-        <div class="pill" id="pill-phone"><span class="dot green" id="dot-phone"></span> Wireless Lens: <strong id="status-phone">Waiting for /mobile...</strong></div>
-        <div class="pill"><span class="dot green"></span> Gemma 4: <strong>gemma-4-31b-it</strong></div>
-        <div class="pill"><span class="dot green"></span> Whisper: <strong>Small (CUDA)</strong></div>
-        <div class="pill"><span class="dot green"></span> Piper: <strong>Lessac Neural</strong></div>
-      </div>
-    </header>
+<div id="app">
 
-    <!-- Full Pipeline Tracker with Live Timing Counters -->
-    <div class="full-pipeline-tracker">
-      <div class="pipe-step" id="pipe-phone"><span class="icon">📱</span> Phone Lens <span class="pipe-time" id="time-phone"></span></div>
-      <div class="pipe-arrow">➜</div>
-      <div class="pipe-step" id="pipe-fastapi"><span class="icon">⚡</span> FastAPI <span class="pipe-time" id="time-fastapi"></span></div>
-      <div class="pipe-arrow">➜</div>
-      <div class="pipe-step" id="pipe-gemma"><span class="icon">🧠</span> Gemma 4 <span class="pipe-time" id="time-gemma"></span></div>
-      <div class="pipe-arrow">➜</div>
-      <div class="pipe-step" id="pipe-reasoning"><span class="icon">🔍</span> Diagnosis <span class="pipe-time" id="time-reasoning"></span></div>
-      <div class="pipe-arrow">➜</div>
-      <div class="pipe-step" id="pipe-tts"><span class="icon">🎙️</span> Piper TTS <span class="pipe-time" id="time-tts"></span></div>
-      <div class="pipe-arrow">➜</div>
-      <div class="pipe-step" id="pipe-esp32"><span class="icon">🔊</span> ESP32 Speaker <span class="pipe-time" id="time-esp32"></span></div>
+  <!-- ═══════════════════════════════════════════════════════════
+       NAVBAR
+  ═══════════════════════════════════════════════════════════ -->
+  <header class="nav">
+    <div class="nav-brand">
+      <div class="nav-logo">◈</div>
+      <div>
+        <div class="nav-title">JARVIS Edge AI</div>
+        <span class="nav-sub">Embedded AI Engineering Copilot</span>
+      </div>
     </div>
 
-    <!-- Main Grid Layout -->
-    <main class="dashboard-grid hero-grid">
-      
-      <!-- Left Column: Hero Mobile Stream Card -->
-      <section class="card vision-hero-card">
-        <div class="card-header">
-          <h2>📱 Mobile AI Vision Feed</h2>
-          <div class="header-badges">
-            <span class="badge badge-cyan" id="badge-frame-age">Last Frame: Waiting</span>
-            <span class="badge badge-purple" id="badge-health-score">Health: 96/100 • 🟢 HEALTHY</span>
-          </div>
-        </div>
-
-        <!-- Hero Mobile Camera Feed Display -->
-        <div class="video-container hero-video">
-          <img id="mobile-live-frame" style="width:100%; height:100%; object-fit:cover; display:none;" />
-          
-          <!-- Component Visual Overlays -->
-          <div class="overlay-labels" id="overlay-labels">
-            <div class="overlay-badge pos-esp32"><span class="check">✓</span> ESP32-S3</div>
-            <div class="overlay-badge pos-oled"><span class="check">✓</span> SSD1306 OLED</div>
-            <div class="overlay-badge pos-mic"><span class="check">✓</span> INMP441 Mic</div>
-            <div class="overlay-badge pos-dac"><span class="check">✓</span> MAX98357A DAC</div>
-            <div class="overlay-badge pos-confidence"><span class="check">⚡</span> AI Confidence: <strong id="conf-val">96%</strong></div>
-            <div class="overlay-badge pos-warning" id="overlay-warning" style="display:none;"><span class="warn">⚠</span> Disconnection Alert</div>
-          </div>
-
-          <div class="video-overlay" id="video-overlay">
-            <span class="pulse-icon">📱</span>
-            <p>Click <strong>"📱 Pair Mobile Camera"</strong> to scan QR code on smartphone</p>
-          </div>
-          
-          <div class="thinking-progress" id="thinking-progress" style="display:none;">
-            <div class="progress-text">🔍 Gemma 4 Vision Analyzing Mobile Frame...</div>
-            <div class="progress-bar-wrap"><div class="progress-bar-fill"></div></div>
-          </div>
-        </div>
-
-        <div class="camera-controls">
-          <button id="btn-connect-phone" class="btn btn-primary">📱 Pair Mobile Camera</button>
-          <button id="btn-analyze-now" class="btn btn-accent">🔍 Inspect Hardware</button>
-          <button id="btn-toggle-live" class="btn btn-outline">▶ Start Live Inspection</button>
-        </div>
-
-        <!-- Structured Hardware Health Report -->
-        <div class="health-report-container">
-          <div class="report-header">
-            <h3>📋 Structured Hardware Health Report</h3>
-            <span class="confidence-tag" id="confidence-tag">Health: 96/100</span>
-          </div>
-          
-          <div class="health-grid">
-            <div class="health-item ok"><span class="status-icon">🟢</span> <strong>ESP32-S3</strong> <span class="detail">Microcontroller</span></div>
-            <div class="health-item ok"><span class="status-icon">🟢</span> <strong>SSD1306 OLED</strong> <span class="detail">Display (0x3C)</span></div>
-            <div class="health-item ok"><span class="status-icon">🟢</span> <strong>INMP441 Mic</strong> <span class="detail">I2S Audio Input</span></div>
-            <div class="health-item ok"><span class="status-icon">🟢</span> <strong>MAX98357A</strong> <span class="detail">Class-D DAC Speaker</span></div>
-            <div class="health-item warn" id="item-severity"><span class="status-icon">🟠</span> <strong>Severity Level</strong> <span class="detail" id="severity-detail">Low</span></div>
-            <div class="health-item est"><span class="status-icon">⚡</span> <strong>Estimated Fix</strong> <span class="detail" id="fix-detail">15 seconds</span></div>
-          </div>
-
-          <!-- Concise Conversational Summary Card -->
-          <div class="summary-card" id="summary-card">
-            <div class="summary-text" id="summary-text">
-              ✔ 4 Components detected &nbsp;•&nbsp; 🟢 Circuit Status: Healthy &nbsp;•&nbsp; ⚡ No repairs required
-            </div>
-            <button id="btn-toggle-tech-report" class="btn-toggle-report">▼ View Technical Analysis</button>
-          </div>
-
-          <div class="diagnosis-box" id="diagnosis-box" style="display:none;">
-            <div class="trace-title" style="font-weight:700; color:var(--accent-cyan); margin-bottom:0.4rem; font-size:0.85rem;">🧠 Gemma 4 Reasoning Explainability Trace:</div>
-            <div class="trace-list" id="reasoning-trace-list">
-              <div class="trace-item ok">✓ ESP32-S3 Microcontroller Detected</div>
-              <div class="trace-item ok">✓ I2C Bus Scan Successful (400 kHz)</div>
-              <div class="trace-item ok">✓ SSD1306 OLED Display Verified (Address 0x3C)</div>
-              <div class="trace-item ok">✓ I2S Audio Drivers Active (INMP441 & MAX98357A)</div>
-              <div class="trace-item ok">✓ Circuit Connections Intact & Verified</div>
-            </div>
-            <div class="raw-analysis-content" id="raw-analysis-content" style="margin-top:0.6rem; font-size:0.88rem;">
-              <p>All circuit connections look good.</p>
-            </div>
-          </div>
-        </div>
-      </section>
-
-      <!-- Right Column: Voice & Assistant Console -->
-      <section class="card chat-card">
-        <div class="card-header">
-          <h2>💬 Voice & Engineering Console</h2>
-          <div class="volume-control">
-            <span>🔊 Speaker Vol:</span>
-            <input type="range" id="vol-slider" min="10" max="120" value="80">
-            <span id="vol-val">80%</span>
-          </div>
-        </div>
-
-        <!-- Chat History -->
-        <div class="chat-messages" id="chat-messages">
-          <div class="msg system-msg">
-            <div class="msg-sender">JARVIS SYSTEM</div>
-            <div class="msg-content">Welcome to JARVIS Mobile AI Vision! Click <strong>"📱 Pair Mobile Camera"</strong> to pair your smartphone as a wireless AI inspection lens.</div>
-          </div>
-        </div>
-
-        <!-- Text Input Bar -->
-        <div class="chat-input-bar">
-          <input type="text" id="text-input" placeholder="Ask JARVIS an engineering question or debugging steps..." autocomplete="off">
-          <button id="btn-send-text" class="btn btn-primary">Send</button>
-          <button id="btn-record-mic" class="btn btn-danger">🎤 Mic</button>
-        </div>
-
-        <!-- Local Engineering Knowledge Base Card -->
-        <div class="kb-card">
-          <div class="kb-header">
-            <h3>📚 Local Engineering Knowledge Base</h3>
-            <span class="kb-status-tag">8 Guides Loaded</span>
-          </div>
-          <div class="kb-chips-grid">
-            <span class="kb-chip">⚙️ ESP-IDF v5 Reference</span>
-            <span class="kb-chip">⚡ Arduino ESP32 Pinouts</span>
-            <span class="kb-chip">🤖 Robotics Motor Drivers</span>
-            <span class="kb-chip">📡 Sensor I2C/SPI Guides</span>
-          </div>
-        </div>
-
-        <!-- Document-Aware Engineering Assistant (RAG Datasheets) -->
-        <div class="rag-docs-card">
-          <div class="rag-header">
-            <h3>📄 Engineering Datasheets & Specs (RAG)</h3>
-            <label for="doc-upload-input" class="btn btn-outline" style="cursor:pointer; font-size:0.75rem; padding:0.25rem 0.6rem;">📁 Upload Spec</label>
-            <input type="file" id="doc-upload-input" accept=".txt,.md" style="display:none;" />
-          </div>
-          <div class="doc-chips-list" id="doc-chips-list">
-            <span class="doc-chip">📄 inmp441_datasheet.txt</span>
-            <span class="doc-chip">📄 max98357a_datasheet.txt</span>
-            <span class="doc-chip">📄 esp32_s3_datasheet.txt</span>
-            <span class="doc-chip">📄 esp_idf_i2s_guide.txt</span>
-          </div>
-        </div>
-
-        <!-- Gemma 4 Function Calling & Device Control Card -->
-        <div class="tool-control-card">
-          <div class="tool-header">
-            <h3>🛠️ Gemma 4 Function Calling</h3>
-            <span class="tool-status-tag">7 Active Tools</span>
-          </div>
-          <div class="tool-buttons-grid">
-            <button class="btn-tool-trigger" data-tool="scan_wifi">📶 Scan Wi-Fi</button>
-            <button class="btn-tool-trigger" data-tool="get_system_info">💻 System Info</button>
-            <button class="btn-tool-trigger" data-tool="get_network_info">🌐 Network IP</button>
-            <button class="btn-tool-trigger" data-tool="restart_microphone">🎙️ Reset Mic</button>
-            <button class="btn-tool-trigger" data-tool="read_sd_card">💾 Read SD Card</button>
-          </div>
-        </div>
-
-        <!-- Persistent Memory & Developer Profile Card -->
-        <div class="memory-card">
-          <div class="memory-header">
-            <h3>🧠 Persistent Developer Memory</h3>
-            <span class="memory-status-tag">Long-Term Storage</span>
-          </div>
-          <div class="memory-chips-grid" id="memory-chips-grid">
-            <span class="mem-chip">Board: <strong>ESP32-S3</strong></span>
-            <span class="mem-chip">Mic: <strong>INMP441</strong></span>
-            <span class="mem-chip">DAC: <strong>MAX98357A</strong></span>
-            <span class="mem-chip">Display: <strong>SSD1306</strong></span>
-            <span class="mem-chip">Style: <strong>C / ESP-IDF v5</strong></span>
-          </div>
-        </div>
-
-        <!-- Real ESP32 Hardware Device Controls Card -->
-        <div class="device-control-card">
-          <div class="device-header">
-            <h3>🎛️ Real ESP32 Hardware Device Controls</h3>
-            <span class="device-status-tag" id="led-status-tag">LED: OFF</span>
-          </div>
-          <div class="device-controls-row">
-            <button id="btn-toggle-led" class="btn btn-outline btn-sm">💡 Toggle Onboard LED</button>
-            <div class="oled-input-wrap">
-              <input type="text" id="oled-text-input" placeholder="Text for OLED (e.g. Hello DTU)..." value="Hello DTU" />
-              <button id="btn-send-oled" class="btn btn-primary btn-sm">🖥️ Send to OLED</button>
-            </div>
-          </div>
-          <div class="preset-buttons-row">
-            <button class="btn-preset" data-text="Hello DTU">"Hello DTU"</button>
-            <button class="btn-preset" data-text="JARVIS AI">"JARVIS AI"</button>
-            <button class="btn-preset" data-text="INSPECTED">"INSPECTED"</button>
-          </div>
-        </div>
-
-        <!-- Latency Statistics Profile -->
-        <div class="latency-bar" id="latency-bar">
-          <span class="lat-tag">Frame Upload: <strong id="lat-upload">165 ms</strong></span>
-          <span class="lat-tag">Gemma 4: <strong id="lat-llm">2.10 s</strong></span>
-          <span class="lat-tag">Piper TTS: <strong id="lat-tts">0.45 s</strong></span>
-          <span class="lat-tag total">Total: <strong id="lat-total">2.715 s</strong></span>
-        </div>
-      </section>
-    </main>
-
-    <!-- Developer Observability Telemetry & Model Benchmarks Suite -->
-    <section class="observability-card">
-      <div class="obs-header">
-        <h2>📊 Developer Observability Telemetry & Model Benchmarks</h2>
-        <span class="badge badge-cyan" id="obs-status">Telemetry Live (2s)</span>
+    <div class="nav-right">
+      <div class="s-pill">
+        <span class="dot live"></span>
+        Gemma 4 <strong>31B-IT</strong>
       </div>
-      
-      <div class="obs-grid">
-        <div class="obs-metric-box">
-          <span class="obs-label">CPU Utilization</span>
-          <strong class="obs-value" id="obs-cpu">14%</strong>
-        </div>
-        <div class="obs-metric-box">
-          <span class="obs-label">Free RAM</span>
-          <strong class="obs-value" id="obs-ram">18.2 GB</strong>
-        </div>
-        <div class="obs-metric-box">
-          <span class="obs-label">RAG Guides</span>
-          <strong class="obs-value" id="obs-rag">8 Loaded</strong>
-        </div>
-        <div class="obs-metric-box">
-          <span class="obs-label">Registered Tools</span>
-          <strong class="obs-value" id="obs-tools">7 Tools</strong>
-        </div>
-        <div class="obs-metric-box">
-          <span class="obs-label">Total Conversation Tokens</span>
-          <strong class="obs-value" id="obs-tokens">1,420</strong>
-        </div>
+      <div class="s-pill" id="pill-esp32">
+        <span class="dot live"></span>
+        ESP32-S3 <strong id="status-esp32">COM15</strong>
+      </div>
+      <div class="s-pill" id="pill-phone">
+        <span class="dot idle" id="dot-phone"></span>
+        Lens <strong id="status-phone">Offline</strong>
+      </div>
+      <div class="s-pill">
+        <span class="dot live"></span>
+        Whisper <strong>Small</strong>
+      </div>
+      <div class="lat-pill">
+        ⚡ <span id="nav-latency">2.71 s</span>
+      </div>
+    </div>
+  </header>
+
+  <!-- ═══════════════════════════════════════════════════════════
+       WORKSPACE  (3-column)
+  ═══════════════════════════════════════════════════════════ -->
+  <main class="workspace">
+
+    <!-- ─────────────────────────────────────────────────────────
+         LEFT PANEL — Live Vision
+    ───────────────────────────────────────────────────────── -->
+    <section class="panel" id="panel-vision">
+      <div class="panel-hdr">
+        <span class="panel-label">📷 Live Vision</span>
+        <span class="badge badge-green" id="badge-frame-age">Waiting for camera…</span>
       </div>
 
-      <!-- Benchmark Matrix Table -->
-      <div class="benchmark-wrap">
-        <div class="table-title">🏆 International Hackathon Evaluation & Model Comparison</div>
-        <table class="benchmark-table">
-          <thead>
-            <tr>
-              <th>Model</th>
-              <th>Avg Latency</th>
-              <th>Hardware Accuracy</th>
-              <th>Multimodal Vision</th>
-              <th>Memory Profile</th>
-              <th>RAG Grounding</th>
-            </tr>
-          </thead>
-          <tbody>
-            <tr class="highlight-row">
-              <td><strong>Gemma 4 31B (Our System)</strong></td>
-              <td><strong id="bench-latency">2.71 s</strong></td>
-              <td><span class="tag-green">96% (High)</span></td>
-              <td>✓ Native</td>
-              <td>✓ Persistent</td>
-              <td>✓ Authoritative</td>
-            </tr>
-            <tr>
-              <td>Qwen 2.5-VL 72B</td>
-              <td>3.10 s</td>
-              <td><span class="tag-yellow">88% (Med)</span></td>
-              <td>✓ Native</td>
-              <td>Limited</td>
-              <td>Partial</td>
-            </tr>
-            <tr>
-              <td>Llama 3 8B (Text)</td>
-              <td>1.85 s</td>
-              <td><span class="tag-red">74% (Low)</span></td>
-              <td>✗ None</td>
-              <td>✗ None</td>
-              <td>✗ None</td>
-            </tr>
-          </tbody>
-        </table>
+      <div class="panel-scroll">
+
+        <!-- Camera Feed -->
+        <div class="cam-box">
+          <img id="mobile-live-frame" alt="Live camera feed" />
+
+          <!-- Empty state -->
+          <div class="cam-empty" id="cam-empty">
+            <div class="cam-empty-icon">📱</div>
+            <div class="cam-empty-title">Connect Phone Camera</div>
+            <div class="cam-empty-sub">Open on your phone and tap<br>Start Live Camera Stream</div>
+            <button class="cam-qr-btn" id="btn-connect-phone">
+              <span>🔗</span> Pair Mobile Lens
+            </button>
+          </div>
+
+          <!-- Live overlay badges -->
+          <div class="cam-live-badge" id="cam-live-badge" style="display:none;">
+            <span class="dot"></span>LIVE
+          </div>
+          <div class="cam-frame-badge" id="cam-frame-badge" style="display:none;"></div>
+          <div class="cam-warn-overlay" id="cam-warn-overlay"></div>
+        </div>
+
+        <!-- Hardware Component Cards -->
+        <div class="hw-grid">
+          <div class="hw-card healthy">
+            <div class="hw-top">
+              <span class="hw-name">ESP32-S3</span>
+              <span class="hw-dot ok"></span>
+            </div>
+            <div class="hw-type">Xtensa LX7 · 240MHz</div>
+            <div class="hw-tags">
+              <span class="hw-tag">3.3V</span>
+              <span class="hw-tag">GPIO21</span>
+              <span class="hw-tag">I2C</span>
+            </div>
+          </div>
+          <div class="hw-card healthy">
+            <div class="hw-top">
+              <span class="hw-name">SSD1306</span>
+              <span class="hw-dot ok"></span>
+            </div>
+            <div class="hw-type">OLED · 128×64px</div>
+            <div class="hw-tags">
+              <span class="hw-tag">0x3C</span>
+              <span class="hw-tag">I2C</span>
+              <span class="hw-tag">Active</span>
+            </div>
+          </div>
+          <div class="hw-card healthy">
+            <div class="hw-top">
+              <span class="hw-name">INMP441</span>
+              <span class="hw-dot ok"></span>
+            </div>
+            <div class="hw-type">MEMS Mic · I2S</div>
+            <div class="hw-tags">
+              <span class="hw-tag">44.1kHz</span>
+              <span class="hw-tag">I2S</span>
+              <span class="hw-tag">GPIO38</span>
+            </div>
+          </div>
+          <div class="hw-card healthy">
+            <div class="hw-top">
+              <span class="hw-name">MAX98357A</span>
+              <span class="hw-dot ok"></span>
+            </div>
+            <div class="hw-type">Class-D DAC · 3.2W</div>
+            <div class="hw-tags">
+              <span class="hw-tag">I2S</span>
+              <span class="hw-tag">16kHz</span>
+              <span class="hw-tag">GPIO41</span>
+            </div>
+          </div>
+        </div>
+
+        <!-- Engineering Inspection Report -->
+        <div class="report-card">
+          <div class="report-hdr">
+            <span class="report-hdr-title">Engineering Inspection Report</span>
+            <span class="report-verdict idle" id="report-verdict">
+              — Awaiting Scan
+            </span>
+          </div>
+          <div class="report-body">
+            <div class="report-progress">
+              <div class="report-progress-fill" id="report-bar"></div>
+            </div>
+            <div class="report-row">
+              <span class="report-key">Components</span>
+              <span class="report-val"><span id="rpt-components">—</span> <span class="chk idle" id="chk-components">○</span></span>
+            </div>
+            <div class="report-row">
+              <span class="report-key">Power Rails</span>
+              <span class="report-val"><span id="rpt-power">3.3V</span> <span class="chk idle" id="chk-power">○</span></span>
+            </div>
+            <div class="report-row">
+              <span class="report-key">I2C Bus</span>
+              <span class="report-val"><span id="rpt-i2c">400kHz</span> <span class="chk idle" id="chk-i2c">○</span></span>
+            </div>
+            <div class="report-row">
+              <span class="report-key">I2S Audio</span>
+              <span class="report-val"><span id="rpt-i2s">Active</span> <span class="chk idle" id="chk-i2s">○</span></span>
+            </div>
+            <div class="report-row">
+              <span class="report-key">AI Confidence</span>
+              <span class="report-val" id="rpt-confidence" style="color:var(--text-3);">—</span>
+            </div>
+            <div class="report-row">
+              <span class="report-key">Potential Issues</span>
+              <span class="report-val" id="rpt-issues" style="color:var(--text-3);">—</span>
+            </div>
+
+            <!-- Reasoning trace (collapsible) -->
+            <button class="trace-toggle-btn" id="trace-toggle-btn">
+              ↓ Show Reasoning Trace
+            </button>
+            <div class="trace-section" id="trace-section">
+              <div class="trace-row ok">✓ ESP32-S3 Microcontroller Detected</div>
+              <div class="trace-row ok">✓ I2C Bus Scan Successful (400 kHz)</div>
+              <div class="trace-row ok">✓ SSD1306 OLED Verified (0x3C)</div>
+              <div class="trace-row ok">✓ I2S Drivers Active (INMP441 &amp; MAX98357A)</div>
+              <div class="trace-row ok">✓ Circuit Connections Intact</div>
+            </div>
+          </div>
+        </div>
+
+      </div><!-- /panel-scroll -->
+    </section>
+
+    <!-- ─────────────────────────────────────────────────────────
+         CENTRE PANEL — AI Brain Pipeline
+    ───────────────────────────────────────────────────────── -->
+    <section class="panel" id="panel-brain">
+      <div class="panel-hdr">
+        <span class="panel-label">🧠 AI Brain</span>
+        <span class="badge badge-cyan" id="brain-status">Ready</span>
+      </div>
+
+      <div class="panel-scroll">
+
+        <!-- Pipeline steps -->
+        <div class="pipeline">
+
+          <div class="pipe-step step-done" id="ps-vision">
+            <div class="pipe-icon">📷</div>
+            <div class="pipe-body">
+              <div class="pipe-name">
+                Vision Capture
+                <span class="pipe-check ok" id="pc-vision">✓</span>
+              </div>
+              <div class="pipe-sub">Mobile camera → JPEG frame</div>
+              <div class="pipe-time done" id="pt-vision">165ms</div>
+            </div>
+          </div>
+
+          <div class="pipe-step step-idle" id="ps-rag">
+            <div class="pipe-icon">📄</div>
+            <div class="pipe-body">
+              <div class="pipe-name">
+                RAG Retrieval
+                <span class="pipe-check pend" id="pc-rag">○</span>
+              </div>
+              <div class="pipe-sub">Datasheet context injection</div>
+              <div class="pipe-time idle" id="pt-rag">—</div>
+            </div>
+          </div>
+
+          <div class="pipe-step step-idle" id="ps-gemma">
+            <div class="pipe-icon">🧠</div>
+            <div class="pipe-body">
+              <div class="pipe-name">
+                Gemma 4 Multimodal
+                <span class="pipe-check pend" id="pc-gemma">○</span>
+              </div>
+              <div class="pipe-sub">gemma-4-31b-it · Vision + Reasoning</div>
+              <div class="pipe-time idle" id="pt-gemma">—</div>
+            </div>
+          </div>
+
+          <div class="pipe-step step-idle" id="ps-piper">
+            <div class="pipe-icon">🎙️</div>
+            <div class="pipe-body">
+              <div class="pipe-name">
+                Piper Neural TTS
+                <span class="pipe-check pend" id="pc-piper">○</span>
+              </div>
+              <div class="pipe-sub">lessac · 16kHz PCM → WebSocket</div>
+              <div class="pipe-time idle" id="pt-piper">—</div>
+            </div>
+          </div>
+
+          <div class="pipe-step step-idle" id="ps-esp32">
+            <div class="pipe-icon">🔊</div>
+            <div class="pipe-body">
+              <div class="pipe-name">
+                ESP32 Speaker
+                <span class="pipe-check pend" id="pc-esp32">○</span>
+              </div>
+              <div class="pipe-sub">MAX98357A Class-D · 3.2W output</div>
+              <div class="pipe-time idle" id="pt-esp32">—</div>
+            </div>
+          </div>
+
+        </div><!-- /pipeline -->
+
+        <div class="brain-divider"></div>
+
+        <!-- Live Metrics -->
+        <div class="brain-metrics">
+          <div class="brain-metric">
+            <div class="brain-metric-label">Free RAM</div>
+            <div class="brain-metric-value" id="bm-ram">—</div>
+          </div>
+          <div class="brain-metric">
+            <div class="brain-metric-label">CPU Load</div>
+            <div class="brain-metric-value" id="bm-cpu">—</div>
+          </div>
+          <div class="brain-metric">
+            <div class="brain-metric-label">RAG Guides</div>
+            <div class="brain-metric-value" id="bm-rag">8</div>
+          </div>
+          <div class="brain-metric">
+            <div class="brain-metric-label">Active Tools</div>
+            <div class="brain-metric-value" id="bm-tools">7</div>
+          </div>
+        </div>
+
+        <!-- Model Benchmark -->
+        <div style="background:var(--surface-1);border:1px solid var(--border);border-radius:var(--r-lg);overflow:hidden;flex-shrink:0;">
+          <div style="padding:10px 13px;border-bottom:1px solid var(--border);font-size:10px;font-weight:700;text-transform:uppercase;letter-spacing:0.08em;color:var(--text-3);">
+            🏆 Model Benchmark Evaluation
+          </div>
+          <div style="padding:10px 13px;display:flex;flex-direction:column;gap:8px;">
+            <!-- Gemma 4 -->
+            <div style="display:flex;align-items:center;justify-content:space-between;">
+              <div>
+                <div style="font-size:12px;font-weight:700;color:var(--cyan);">Gemma 4 31B</div>
+                <div style="font-size:10px;color:var(--text-3);">96% accuracy · Vision · RAG · Memory</div>
+              </div>
+              <div style="font-family:var(--mono);font-size:12px;font-weight:700;color:var(--text-1);" id="bench-latency">2.71s</div>
+            </div>
+            <div style="height:3px;background:var(--surface-3);border-radius:2px;"><div style="height:100%;width:87%;background:linear-gradient(90deg,var(--cyan),var(--purple));border-radius:2px;"></div></div>
+            <!-- Qwen -->
+            <div style="display:flex;align-items:center;justify-content:space-between;">
+              <div>
+                <div style="font-size:11.5px;font-weight:600;color:var(--text-2);">Qwen 2.5-VL 72B</div>
+                <div style="font-size:10px;color:var(--text-3);">88% accuracy · Partial RAG</div>
+              </div>
+              <div style="font-family:var(--mono);font-size:11px;color:var(--text-3);">3.10s</div>
+            </div>
+            <div style="height:2px;background:var(--surface-3);border-radius:2px;"><div style="height:100%;width:64%;background:rgba(255,255,255,0.12);border-radius:2px;"></div></div>
+            <!-- Llama -->
+            <div style="display:flex;align-items:center;justify-content:space-between;">
+              <div>
+                <div style="font-size:11.5px;font-weight:600;color:var(--text-2);">Llama 3 8B</div>
+                <div style="font-size:10px;color:var(--text-3);">74% accuracy · Text only</div>
+              </div>
+              <div style="font-family:var(--mono);font-size:11px;color:var(--text-3);">1.85s</div>
+            </div>
+            <div style="height:2px;background:var(--surface-3);border-radius:2px;"><div style="height:100%;width:38%;background:rgba(255,255,255,0.08);border-radius:2px;"></div></div>
+          </div>
+        </div>
+
+        <!-- Waveform -->
+        <div class="waveform-wrap">
+          <div class="waveform-label">🔊 Audio Output</div>
+          <canvas id="waveform-canvas" width="200" height="32"></canvas>
+        </div>
+
+      </div><!-- /panel-scroll -->
+    </section>
+
+    <!-- ─────────────────────────────────────────────────────────
+         RIGHT PANEL — Conversation
+    ───────────────────────────────────────────────────────── -->
+    <section class="panel" id="panel-chat">
+      <div class="panel-hdr">
+        <span class="panel-label">💬 Conversation</span>
+        <span class="badge badge-purple" id="token-badge">0 tokens</span>
+      </div>
+
+      <div class="chat-list" id="chat-list">
+        <!-- Welcome message -->
+        <div class="msg-card mc-system">
+          <div class="msg-meta">
+            <span class="msg-sender-tag sys">JARVIS SYSTEM</span>
+            <span class="msg-time" id="welcome-time"></span>
+          </div>
+          <div class="msg-text">
+            Welcome. Pair your phone camera and tap <strong>Inspect</strong> to begin hardware diagnosis — or type an engineering question.
+          </div>
+        </div>
+      </div>
+
+      <!-- Chat input footer -->
+      <div class="chat-footer">
+        <button class="icon-btn mic-btn" id="btn-record-mic" title="Voice input">🎤</button>
+        <input class="chat-input" id="text-input" type="text"
+               placeholder="Ask an engineering question…" autocomplete="off">
+        <button class="icon-btn send-btn" id="btn-send-text" title="Send">↗</button>
       </div>
     </section>
 
-      <!-- Right Column: Voice & Assistant Console -->
-      <section class="card chat-card">
-        <div class="card-header">
-          <h2>💬 Voice & Engineering Console</h2>
-          <div class="volume-control">
-            <span>🔊 Speaker Vol:</span>
-            <input type="range" id="vol-slider" min="10" max="120" value="80">
-            <span id="vol-val">80%</span>
-          </div>
-        </div>
+  </main>
 
-        <!-- Chat History -->
-        <div class="chat-messages" id="chat-messages">
-          <div class="msg system-msg">
-            <div class="msg-sender">JARVIS SYSTEM</div>
-            <div class="msg-content">Welcome to JARVIS Mobile AI Vision! Click <strong>"📱 Pair Mobile Camera"</strong> to pair your smartphone as a wireless AI inspection lens.</div>
-          </div>
-        </div>
+  <!-- ═══════════════════════════════════════════════════════════
+       DOCK
+  ═══════════════════════════════════════════════════════════ -->
+  <nav class="dock">
+    <button class="dock-btn" id="btn-connect-phone-dock">
+      <span class="dock-icon">📱</span> Pair Camera
+    </button>
+    <button class="dock-btn dock-primary" id="btn-analyze-now">
+      <span class="dock-icon">📷</span> Inspect
+    </button>
+    <button class="dock-btn" id="btn-upload-doc">
+      <span class="dock-icon">📁</span> Upload Datasheet
+      <input type="file" id="doc-upload-input" accept=".txt,.md" style="display:none;">
+    </button>
+    <button class="dock-btn" id="btn-controls">
+      <span class="dock-icon">🎛️</span> Controls
+    </button>
+    <button class="dock-btn" id="btn-voice-dock">
+      <span class="dock-icon">🎤</span> Voice
+    </button>
+  </nav>
 
-        <!-- Text Input Bar -->
-        <div class="chat-input-bar">
-          <input type="text" id="text-input" placeholder="Ask JARVIS an engineering question or debugging steps..." autocomplete="off">
-          <button id="btn-send-text" class="btn btn-primary">Send</button>
-          <button id="btn-record-mic" class="btn btn-danger">🎤 Mic</button>
-        </div>
-
-        <!-- Local Engineering Knowledge Base Card -->
-        <div class="kb-card">
-          <div class="kb-header">
-            <h3>📚 Local Engineering Knowledge Base</h3>
-            <span class="kb-status-tag">4 Guides Loaded</span>
-          </div>
-          <div class="kb-chips-grid">
-            <span class="kb-chip">⚙️ ESP-IDF v5 Reference</span>
-            <span class="kb-chip">⚡ Arduino ESP32 Pinouts</span>
-            <span class="kb-chip">🤖 Robotics Motor Drivers</span>
-            <span class="kb-chip">📡 Sensor I2C/SPI Guides</span>
-          </div>
-        </div>
-
-        <!-- Document-Aware Engineering Assistant (RAG Datasheets) -->
-        <div class="rag-docs-card">
-          <div class="rag-header">
-            <h3>📄 Engineering Datasheets & Specs (RAG)</h3>
-            <label for="doc-upload-input" class="btn btn-outline" style="cursor:pointer; font-size:0.75rem; padding:0.25rem 0.6rem;">📁 Upload Spec</label>
-            <input type="file" id="doc-upload-input" accept=".txt,.md" style="display:none;" />
-          </div>
-          <div class="doc-chips-list" id="doc-chips-list">
-            <span class="doc-chip">📄 inmp441_datasheet.txt</span>
-            <span class="doc-chip">📄 max98357a_datasheet.txt</span>
-            <span class="doc-chip">📄 esp32_s3_datasheet.txt</span>
-            <span class="doc-chip">📄 esp_idf_i2s_guide.txt</span>
-          </div>
-        </div>
-
-        <!-- Gemma 4 Function Calling & Device Control Card -->
-        <div class="tool-control-card">
-          <div class="tool-header">
-            <h3>🛠️ Gemma 4 Function Calling</h3>
-            <span class="tool-status-tag">5 Active Tools</span>
-          </div>
-          <div class="tool-buttons-grid">
-            <button class="btn-tool-trigger" data-tool="scan_wifi">📶 Scan Wi-Fi</button>
-            <button class="btn-tool-trigger" data-tool="get_system_info">💻 System Info</button>
-            <button class="btn-tool-trigger" data-tool="get_network_info">🌐 Network IP</button>
-            <button class="btn-tool-trigger" data-tool="restart_microphone">🎙️ Reset Mic</button>
-            <button class="btn-tool-trigger" data-tool="read_sd_card">💾 Read SD Card</button>
-          </div>
-        </div>
-
-        <!-- Persistent Memory & Developer Profile Card -->
-        <div class="memory-card">
-          <div class="memory-header">
-            <h3>🧠 Persistent Developer Memory</h3>
-            <span class="memory-status-tag">Long-Term Storage</span>
-          </div>
-          <div class="memory-chips-grid" id="memory-chips-grid">
-            <span class="mem-chip">Board: <strong>ESP32-S3</strong></span>
-            <span class="mem-chip">Mic: <strong>INMP441</strong></span>
-            <span class="mem-chip">DAC: <strong>MAX98357A</strong></span>
-            <span class="mem-chip">Display: <strong>SSD1306</strong></span>
-            <span class="mem-chip">Style: <strong>C / ESP-IDF v5</strong></span>
-          </div>
-        </div>
-
-        <!-- Real ESP32 Hardware Device Controls Card -->
-        <div class="device-control-card">
-          <div class="device-header">
-            <h3>🎛️ Real ESP32 Hardware Device Controls</h3>
-            <span class="device-status-tag" id="led-status-tag">LED: OFF</span>
-          </div>
-          <div class="device-controls-row">
-            <button id="btn-toggle-led" class="btn btn-outline btn-sm">💡 Toggle Onboard LED</button>
-            <div class="oled-input-wrap">
-              <input type="text" id="oled-text-input" placeholder="Text for OLED (e.g. Hello DTU)..." value="Hello DTU" />
-              <button id="btn-send-oled" class="btn btn-primary btn-sm">🖥️ Send to OLED</button>
-            </div>
-          </div>
-          <div class="preset-buttons-row">
-            <button class="btn-preset" data-text="Hello DTU">"Hello DTU"</button>
-            <button class="btn-preset" data-text="JARVIS AI">"JARVIS AI"</button>
-            <button class="btn-preset" data-text="INSPECTED">"INSPECTED"</button>
-          </div>
-        </div>
-
-        <!-- Latency Statistics Profile -->
-        <div class="latency-bar" id="latency-bar">
-          <span class="lat-tag">Frame Upload: <strong id="lat-upload">165 ms</strong></span>
-          <span class="lat-tag">Gemma 4: <strong id="lat-llm">2.10 s</strong></span>
-          <span class="lat-tag">Piper TTS: <strong id="lat-tts">0.45 s</strong></span>
-          <span class="lat-tag total">Total: <strong id="lat-total">2.715 s</strong></span>
-        </div>
-      </section>
-    </main>
-
-    <!-- Hackathon System Feature Matrix -->
-    <footer class="feature-matrix-bar">
-      <span class="feature-chip">✓ Voice Engineering Assistant</span>
-      <span class="feature-chip">✓ Mobile AI Vision</span>
-      <span class="feature-chip">✓ Live Wireless Camera</span>
-      <span class="feature-chip">✓ Automatic Component Detection</span>
-      <span class="feature-chip">✓ Wiring Diagnostics</span>
-      <span class="feature-chip">✓ Hardware Health Score</span>
-      <span class="feature-chip">✓ ESP32 Voice Output</span>
-      <span class="feature-chip">✓ Gemma 4 Multimodal</span>
-    </footer>
-  </div>
-
-  <!-- QR Connection Modal -->
-  <div class="modal-backdrop" id="qr-modal" style="display:none;">
-    <div class="modal-card">
-      <div class="modal-header">
-        <h3>📱 Pair Smartphone Camera</h3>
-        <button id="btn-close-modal" class="btn-close">✖</button>
+  <!-- ═══════════════════════════════════════════════════════════
+       TIMELINE BAR
+  ═══════════════════════════════════════════════════════════ -->
+  <div class="timeline">
+    <div class="tl-seg">
+      <div class="tl-info">
+        <span class="tl-name">Camera</span>
+        <span class="tl-ms" id="tl-camera">165ms</span>
       </div>
-      <p>Scan this QR code with your phone camera:</p>
-      <div class="qr-code-wrap" style="margin: 0.8rem 0; display: flex; justify-content: center;">
-        <img id="qr-code-img" src="https://api.qrserver.com/v1/create-qr-code/?size=200x200&data=http://192.168.1.111:8001/mobile" alt="Mobile QR Code" style="width: 200px; height: 200px; border-radius: 12px; border: 2px solid #06b6d4; padding: 6px; background: white;" />
+      <div class="tl-track"><div class="tl-fill" id="tlf-camera"></div></div>
+    </div>
+    <span class="tl-arrow">→</span>
+    <div class="tl-seg">
+      <div class="tl-info">
+        <span class="tl-name">Vision</span>
+        <span class="tl-ms" id="tl-vision">—</span>
       </div>
-      <div class="url-display" id="mobile-url">http://192.168.1.111:8001/mobile</div>
-      <div class="modal-footer">
-        <a href="/mobile" target="_blank" class="btn btn-primary">Open Mobile AI Lens</a>
+      <div class="tl-track"><div class="tl-fill" id="tlf-vision"></div></div>
+    </div>
+    <span class="tl-arrow">→</span>
+    <div class="tl-seg">
+      <div class="tl-info">
+        <span class="tl-name">Gemma 4</span>
+        <span class="tl-ms" id="tl-gemma">—</span>
+      </div>
+      <div class="tl-track"><div class="tl-fill" id="tlf-gemma"></div></div>
+    </div>
+    <span class="tl-arrow">→</span>
+    <div class="tl-seg">
+      <div class="tl-info">
+        <span class="tl-name">Piper TTS</span>
+        <span class="tl-ms" id="tl-piper">—</span>
+      </div>
+      <div class="tl-track"><div class="tl-fill" id="tlf-piper"></div></div>
+    </div>
+    <span class="tl-arrow">→</span>
+    <div class="tl-seg">
+      <div class="tl-info">
+        <span class="tl-name">Total</span>
+        <span class="tl-ms tl-active" id="tl-total">2.71s</span>
       </div>
     </div>
   </div>
 
-  <script src="/static/app.js"></script>
+  <!-- ═══════════════════════════════════════════════════════════
+       CONTROLS DRAWER (slides up above dock)
+  ═══════════════════════════════════════════════════════════ -->
+  <div class="controls-overlay" id="controls-overlay"></div>
+  <div class="controls-drawer" id="controls-drawer">
+    <div class="drawer-hdr">
+      <div class="drawer-title">🎛️ Hardware Device Controls</div>
+      <button class="drawer-close" id="drawer-close">✕</button>
+    </div>
+
+    <!-- LED Control -->
+    <div class="led-row">
+      <div class="led-info">
+        <span class="led-indicator" id="led-indicator"></span>
+        Onboard LED
+        <span class="badge badge-green" id="led-status-badge" style="display:none;">ON</span>
+      </div>
+      <div class="toggle" id="led-toggle">
+        <div class="toggle-knob"></div>
+      </div>
+    </div>
+
+    <!-- OLED Control -->
+    <div class="oled-section">
+      <div class="oled-section-label">🖥️ OLED Display</div>
+      <div class="oled-input-row">
+        <input class="oled-field" id="oled-text-input" type="text"
+               placeholder="Text to display on OLED…" value="Hello DTU">
+        <button class="oled-send" id="btn-send-oled">Send</button>
+      </div>
+      <div class="oled-presets">
+        <button class="oled-preset" data-text="Hello DTU">Hello DTU</button>
+        <button class="oled-preset" data-text="JARVIS AI">JARVIS AI</button>
+        <button class="oled-preset" data-text="INSPECTED">INSPECTED</button>
+        <button class="oled-preset" data-text="PASS ✓">PASS ✓</button>
+      </div>
+    </div>
+
+    <!-- Datasheet upload -->
+    <div class="upload-section">
+      <div class="oled-section-label">📄 Upload Datasheet to RAG</div>
+      <label class="upload-drop" for="doc-upload-input-drawer">
+        <div class="upload-drop-icon">📁</div>
+        <div class="upload-drop-text">Click to choose a file</div>
+        <div class="upload-drop-sub">.txt or .md — indexed instantly</div>
+        <input type="file" id="doc-upload-input-drawer" accept=".txt,.md" style="display:none;">
+      </label>
+    </div>
+  </div>
+
+  <!-- ═══════════════════════════════════════════════════════════
+       QR MODAL
+  ═══════════════════════════════════════════════════════════ -->
+  <div class="modal-overlay" id="qr-modal">
+    <div class="modal-box">
+      <div class="modal-title">📱 Pair Mobile Camera</div>
+      <div class="modal-sub">Open this URL on your phone</div>
+      <img id="qr-code-img" width="200" height="200" alt="QR code">
+      <div class="modal-url" id="mobile-url">Loading…</div>
+      <button class="modal-close" id="btn-close-modal">Done</button>
+    </div>
+  </div>
+
+</div><!-- /#app -->
+<script src="/static/app.js"></script>
 </body>
 </html>
