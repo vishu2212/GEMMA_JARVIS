@@ -172,15 +172,16 @@ document.addEventListener('DOMContentLoaded', () => {
     const hostIp = (window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1')
       ? '192.168.1.111' : window.location.hostname;
     const fullUrl = `http://${hostIp}:${window.location.port || '8001'}/mobile`;
-    mobileUrl.textContent = fullUrl;
+    if (mobileUrl) mobileUrl.textContent = fullUrl;
     const qrImg = document.getElementById('qr-code-img');
     if (qrImg) qrImg.src = `https://api.qrserver.com/v1/create-qr-code/?size=200x200&data=${encodeURIComponent(fullUrl)}`;
-    qrModal.classList.add('open');
+    if (qrModal) qrModal.classList.add('open');
   }
 
-  btnConnectPhone?.addEventListener('click', openQrModal);
-  btnConnectPhoneDock?.addEventListener('click', openQrModal);
-  btnCloseModal?.addEventListener('click', () => qrModal.classList.remove('open'));
+  document.querySelectorAll('#btn-connect-phone, #btn-connect-phone-dock, .cam-qr-btn').forEach(btn => {
+    btn.addEventListener('click', openQrModal);
+  });
+  btnCloseModal?.addEventListener('click', () => qrModal?.classList.remove('open'));
   qrModal?.addEventListener('click', e => { if (e.target === qrModal) qrModal.classList.remove('open'); });
 
   /* ── Controls Drawer ──────────────────────────────────────── */
