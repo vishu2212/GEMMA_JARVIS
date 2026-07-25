@@ -65,6 +65,13 @@ document.addEventListener('DOMContentLoaded', () => {
       if (res.ok) {
         const data = await res.json();
         
+        // Update live captured image frame on PC monitor
+        if (data.latest_image_url) {
+          mobileLiveFrame.src = data.latest_image_url;
+          mobileLiveFrame.style.display = 'block';
+          videoOverlay.style.display = 'none';
+        }
+
         if (data.phone_connected) {
           statusPhone.textContent = 'Connected';
           dotPhone.className = 'dot green';
@@ -74,16 +81,15 @@ document.addEventListener('DOMContentLoaded', () => {
             badgeFrameAge.textContent = `Last Frame: ${ageSec}s ago`;
             latUpload.textContent = `${data.last_frame_age_ms} ms`;
           }
-
-          if (data.latest_image_url) {
-            mobileLiveFrame.src = data.latest_image_url;
-            mobileLiveFrame.style.display = 'block';
-            videoOverlay.style.display = 'none';
-          }
         } else {
-          statusPhone.textContent = 'Waiting for /mobile...';
-          dotPhone.className = 'dot red';
-          badgeFrameAge.textContent = 'Last Frame: Offline';
+          statusPhone.textContent = data.last_frame_age_ms > 0 ? 'Standby' : 'Waiting for /mobile...';
+          dotPhone.className = data.last_frame_age_ms > 0 ? 'dot green' : 'dot red';
+          if (data.last_frame_age_ms >= 0) {
+            const ageSec = (data.last_frame_age_ms / 1000).toFixed(1);
+            badgeFrameAge.textContent = `Last Frame: ${ageSec}s ago`;
+          } else {
+            badgeFrameAge.textContent = 'Last Frame: Offline';
+          }
         }
 
         // Update Diagnosis Report if available

@@ -409,7 +409,7 @@ async def get_mobile_latest():
     """Gets the current status of the Mobile AI Vision stream and latest diagnosis report."""
     now = time.time()
     last_age = int((now - mobile_vision_state["last_frame_timestamp"]) * 1000) if mobile_vision_state["last_frame_timestamp"] > 0 else -1
-    phone_online = last_age >= 0 and last_age < 10000
+    phone_online = last_age >= 0 and last_age < 30000
 
     return {
         "phone_connected": phone_online,
