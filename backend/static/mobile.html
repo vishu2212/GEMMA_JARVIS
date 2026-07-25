@@ -158,27 +158,54 @@
 
     fileInput.addEventListener('change', async (e) => {
       if (!e.target.files || !e.target.files[0]) return;
-      const file = e.target.files[0];
+      const rawFile = e.target.files[0];
 
-      previewImg.src = URL.createObjectURL(file);
+      previewImg.src = URL.createObjectURL(rawFile);
       previewImg.style.display = 'block';
       video.style.display = 'none';
       placeholderView.style.display = 'none';
 
-      statusText.textContent = 'Uploading Photo & Analyzing with Gemma 4...';
+      statusText.textContent = 'Compressing & Uploading Photo to PC...';
 
-      const formData = new FormData();
-      formData.append('file', file);
-
-      try {
-        const res = await fetch(`${API_BASE}/mobile/frame`, { method: 'POST', body: formData });
-        const data = await res.json();
-        if (data.status === 'received') {
-          statusText.textContent = '✓ Frame Uploaded! Tap Inspect on PC or Snap Another Photo.';
+      const img = new Image();
+      img.onload = () => {
+        const maxDim = 1920;
+        let w = img.width;
+        let h = img.height;
+        if (w > maxDim || h > maxDim) {
+          if (w > h) {
+            h = Math.round((h * maxDim) / w);
+            w = maxDim;
+          } else {
+            w = Math.round((w * maxDim) / h);
+            h = maxDim;
+          }
         }
-      } catch (err) {
-        statusText.textContent = 'Error Uploading Photo to PC';
-      }
+        canvas.width = w;
+        canvas.height = h;
+        const ctx = canvas.getContext('2d');
+        ctx.drawImage(img, 0, 0, w, h);
+
+        canvas.toBlob(async (blob) => {
+          if (!blob) return;
+          const formData = new FormData();
+          formData.append('file', blob, 'photo_frame.jpg');
+
+          try {
+            const res = await fetch(`${API_BASE}/mobile/frame`, { method: 'POST', body: formData });
+            const data = await res.json();
+            if (data.status === 'received') {
+              statusText.textContent = '✓ Frame Uploaded! Tap Inspect on PC or Snap Another Photo.';
+            } else {
+              statusText.textContent = 'Error Uploading Photo to PC';
+            }
+          } catch (err) {
+            console.error('Upload error:', err);
+            statusText.textContent = 'Error Uploading Photo to PC';
+          }
+        }, 'image/jpeg', 0.85);
+      };
+      img.src = URL.createObjectURL(rawFile);
     });
   </script>
 </body>

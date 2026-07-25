@@ -230,28 +230,54 @@ document.addEventListener('DOMContentLoaded', () => {
   pcCircuitUploadInput?.addEventListener('change', async (e) => {
     if (!e.target.files || !e.target.files[0]) return;
     const file = e.target.files[0];
-    const formData = new FormData();
-    formData.append('file', file);
 
-    try {
-      const res = await fetch(`${API_BASE}/mobile/frame`, { method: 'POST', body: formData });
-      const data = await res.json();
-      if (data.status === 'received') {
-        const localUrl = URL.createObjectURL(file);
-        mobileLiveFrame.src = localUrl;
-        mobileLiveFrame.style.display = 'block';
-        camEmpty.style.display = 'none';
-        camLiveBadge.style.display = 'flex';
-        camFrameBadge.style.display = 'block';
-        camFrameBadge.textContent = 'Uploaded just now';
-        statusPhone.textContent = 'Connected';
-        dotPhone.className = 'dot live';
-        badgeFrameAge.textContent = 'Live';
-        badgeFrameAge.className = 'badge badge-green';
+    const img = new Image();
+    img.onload = () => {
+      const maxDim = 1920;
+      let w = img.width;
+      let h = img.height;
+      if (w > maxDim || h > maxDim) {
+        if (w > h) {
+          h = Math.round((h * maxDim) / w);
+          w = maxDim;
+        } else {
+          w = Math.round((w * maxDim) / h);
+          h = maxDim;
+        }
       }
-    } catch (err) {
-      console.error('Error uploading PC photo:', err);
-    }
+      const tempCanvas = document.createElement('canvas');
+      tempCanvas.width = w;
+      tempCanvas.height = h;
+      const ctx = tempCanvas.getContext('2d');
+      ctx.drawImage(img, 0, 0, w, h);
+
+      tempCanvas.toBlob(async (blob) => {
+        if (!blob) return;
+        const formData = new FormData();
+        formData.append('file', blob, 'pc_photo_frame.jpg');
+
+        try {
+          const res = await fetch(`${API_BASE}/mobile/frame`, { method: 'POST', body: formData });
+          const data = await res.json();
+          if (data.status === 'received') {
+            const localUrl = URL.createObjectURL(blob);
+            mobileLiveFrame.src = localUrl;
+            mobileLiveFrame.style.display = 'block';
+            camEmpty.style.display = 'none';
+            camLiveBadge.style.display = 'flex';
+            camFrameBadge.style.display = 'block';
+            camFrameBadge.textContent = 'Uploaded just now';
+            statusPhone.textContent = 'Connected';
+            dotPhone.className = 'dot live';
+            badgeFrameAge.textContent = 'Live';
+            badgeFrameAge.className = 'badge badge-green';
+          }
+        } catch (err) {
+          console.error('Error uploading PC photo:', err);
+        }
+      }, 'image/jpeg', 0.85);
+    };
+    img.src = URL.createObjectURL(file);
   });
   /* ── Direct PC Webcam Stream ─────────────────────────────── */
   const pcWebcamVideo = document.getElementById('pc-webcam-video');
