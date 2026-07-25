@@ -79,7 +79,7 @@ document.addEventListener('DOMContentLoaded', () => {
 
   // QR Modal toggle
   btnConnectMobile.addEventListener('click', () => {
-    mobileUrl.textContent = window.location.origin + '/camera';
+    mobileUrl.textContent = window.location.origin + '/mobile';
     qrModal.style.display = 'flex';
   });
 

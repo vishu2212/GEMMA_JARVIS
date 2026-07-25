@@ -79,5 +79,12 @@ async def serve_camera():
         return FileResponse(camera_file)
     return {"message": "Mobile Camera Page Not Found"}
 
+@app.get("/mobile", response_class=FileResponse)
+async def serve_mobile():
+    mobile_file = settings.BASE_DIR / "static" / "mobile.html"
+    if mobile_file.exists():
+        return FileResponse(mobile_file)
+    return {"message": "Mobile Lens Page Not Found"}
+
 if __name__ == "__main__":
     uvicorn.run("server:app", host=settings.HOST, port=settings.PORT, reload=False)

@@ -1,0 +1,182 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+  <title>JARVIS Mobile AI Lens</title>
+  <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@400;600;700;800&display=swap" rel="stylesheet">
+  <style>
+    * { box-sizing: border-box; margin: 0; padding: 0; font-family: 'Outfit', sans-serif; }
+    body { background: #090d16; color: #f8fafc; text-align: center; padding: 1rem; display: flex; flex-direction: column; height: 100vh; justify-content: space-between; }
+    .header { padding: 0.5rem 0; }
+    .header h1 { font-size: 1.5rem; color: #06b6d4; font-weight: 800; letter-spacing: 0.5px; }
+    .header p { font-size: 0.85rem; color: #94a3b8; margin-top: 0.2rem; }
+    .video-wrap { position: relative; width: 100%; flex: 1; background: #020617; border-radius: 16px; overflow: hidden; border: 1px solid rgba(255,255,255,0.12); margin: 0.75rem 0; display: flex; flex-direction: column; align-items: center; justify-content: center; box-shadow: 0 8px 30px rgba(0,0,0,0.4); }
+    video { width: 100%; height: 100%; object-fit: cover; }
+    canvas { display: none; }
+    .preview-img { max-width: 100%; max-height: 100%; border-radius: 12px; object-fit: contain; }
+    .btn-group { display: flex; flex-direction: column; gap: 0.75rem; width: 100%; }
+    .btn { background: linear-gradient(135deg, #06b6d4, #3b82f6); color: white; border: none; padding: 1rem 1.5rem; border-radius: 30px; font-size: 1.05rem; font-weight: 700; cursor: pointer; width: 100%; box-shadow: 0 4px 20px rgba(6,182,212,0.4); display: flex; align-items: center; justify-content: center; gap: 0.5rem; }
+    .btn-accent { background: linear-gradient(135deg, #8b5cf6, #c084fc); box-shadow: 0 4px 20px rgba(139,92,246,0.4); }
+    .btn-danger { background: #ef4444; }
+    .status-badge { display: inline-flex; align-items: center; gap: 0.5rem; background: rgba(16, 185, 129, 0.15); color: #10b981; border: 1px solid rgba(16, 185, 129, 0.3); padding: 0.45rem 1.2rem; border-radius: 20px; font-size: 0.88rem; font-weight: 600; }
+    .dot { width: 9px; height: 9px; border-radius: 50%; background: #10b981; box-shadow: 0 0 10px #10b981; }
+    .scan-effect { position: absolute; top: 0; left: 0; width: 100%; height: 3px; background: linear-gradient(90deg, transparent, #06b6d4, transparent); animation: scan 2s infinite linear; }
+    @keyframes scan { 0% { top: 0; } 100% { top: 100%; } }
+  </style>
+</head>
+<body>
+  <div class="header">
+    <h1>📱 JARVIS WIRELESS LENS</h1>
+    <p>Live Phone Camera Stream to PC & ESP32 Speaker</p>
+  </div>
+
+  <div class="video-wrap">
+    <video id="mobile-video" autoplay playsinline muted></video>
+    <img id="preview-img" class="preview-img" style="display:none;" />
+    <div id="placeholder-view" style="display:none;">
+      <span style="font-size: 3.5rem; opacity: 0.5;">📷</span>
+      <p style="margin-top:0.5rem; font-size:0.9rem; color:#94a3b8;">Point phone camera at breadboard circuit</p>
+    </div>
+    <div class="scan-effect" id="scan-effect"></div>
+    <canvas id="mobile-canvas"></canvas>
+  </div>
+
+  <div class="footer">
+    <div id="status-box" style="margin-bottom: 0.85rem;">
+      <span class="status-badge"><span class="dot"></span> <span id="status-text">Connecting Rear Camera...</span></span>
+    </div>
+
+    <!-- Hidden Native Camera File Input -->
+    <input type="file" id="mobile-file-input" accept="image/*" capture="environment" style="display:none;">
+
+    <div class="btn-group">
+      <button id="btn-snap-photo" class="btn btn-accent">📸 Snap High-Res Photo</button>
+      <button id="btn-toggle-stream" class="btn">📹 Stream Live Frames to PC</button>
+    </div>
+  </div>
+
+  <script>
+    const video = document.getElementById('mobile-video');
+    const canvas = document.getElementById('mobile-canvas');
+    const previewImg = document.getElementById('preview-img');
+    const placeholderView = document.getElementById('placeholder-view');
+    const btnStream = document.getElementById('btn-toggle-stream');
+    const btnSnap = document.getElementById('btn-snap-photo');
+    const fileInput = document.getElementById('mobile-file-input');
+    const statusText = document.getElementById('status-text');
+    const scanEffect = document.getElementById('scan-effect');
+
+    let stream = null;
+    let frameInterval = null;
+
+    // 1. Auto-Start Rear Camera on Page Load
+    startRearCamera();
+
+    async function startRearCamera() {
+      if (!navigator.mediaDevices || !navigator.mediaDevices.getUserMedia) {
+        console.warn("navigator.mediaDevices is unavailable in this HTTP browser context.");
+        statusText.textContent = "HTTPS Required for Live Stream. Tap 'Snap High-Res Photo' Below!";
+        video.style.display = "none";
+        placeholderView.style.display = "flex";
+        scanEffect.style.display = "none";
+        return;
+      }
+
+      try {
+        stream = await navigator.mediaDevices.getUserMedia({
+          video: { facingMode: { ideal: 'environment' }, width: { ideal: 1280 }, height: { ideal: 720 } },
+          audio: false
+        });
+        video.srcObject = stream;
+        video.style.display = "block";
+        placeholderView.style.display = "none";
+        statusText.textContent = "Streaming Live Frames to PC & ESP32 Speaker";
+        btnStream.textContent = "🛑 Stop Live Stream";
+        btnStream.classList.add("btn-danger");
+
+        // Automatically sample frame every 2.5 seconds to PC backend
+        frameInterval = setInterval(sendFrameToPC, 2500);
+      } catch (err) {
+        console.error("Camera access error:", err);
+        statusText.textContent = "Camera Permission Denied. Tap 'Snap Photo' Below!";
+        video.style.display = "none";
+        placeholderView.style.display = "flex";
+        scanEffect.style.display = "none";
+      }
+    }
+
+    btnStream.addEventListener("click", () => {
+      if (!stream) {
+        startRearCamera();
+      } else {
+        stopRearCamera();
+      }
+    });
+
+    function stopRearCamera() {
+      if (frameInterval) clearInterval(frameInterval);
+      if (stream) stream.getTracks().forEach(t => t.stop());
+      video.srcObject = null;
+      stream = null;
+      statusText.textContent = "Camera Stream Stopped";
+      btnStream.textContent = "📹 Stream Live Frames to PC";
+      btnStream.classList.remove("btn-danger");
+      video.style.display = "none";
+      placeholderView.style.display = "flex";
+      scanEffect.style.display = "none";
+    }
+
+    async function sendFrameToPC() {
+      if (!stream) return;
+      const ctx = canvas.getContext('2d');
+      canvas.width = video.videoWidth || 640;
+      canvas.height = video.videoHeight || 480;
+      ctx.drawImage(video, 0, 0, canvas.width, canvas.height);
+
+      canvas.toBlob(async (blob) => {
+        if (!blob) return;
+        const formData = new FormData();
+        formData.append('file', blob, 'mobile_frame.jpg');
+        formData.append('prompt', 'Analyze this breadboard circuit image. Identify components and check for missing wires or hardware errors.');
+        try {
+          await fetch('/vision/analyze', { method: 'POST', body: formData });
+        } catch (err) {
+          console.error('Error streaming frame to PC:', err);
+        }
+      }, 'image/jpeg', 0.85);
+    }
+
+    // 2. High-Res Photo Fallback Button
+    btnSnap.addEventListener('click', () => {
+      fileInput.click();
+    });
+
+    fileInput.addEventListener('change', async (e) => {
+      if (!e.target.files || !e.target.files[0]) return;
+      const file = e.target.files[0];
+
+      previewImg.src = URL.createObjectURL(file);
+      previewImg.style.display = 'block';
+      video.style.display = 'none';
+      placeholderView.style.display = 'none';
+
+      statusText.textContent = 'Sending Photo to PC for Gemma 4 Analysis...';
+
+      const formData = new FormData();
+      formData.append('file', file);
+      formData.append('prompt', 'Analyze this breadboard circuit image. Identify components and check for missing wires or hardware errors.');
+
+      try {
+        const res = await fetch('/vision/analyze', { method: 'POST', body: formData });
+        const data = await res.json();
+        if (data.status === 'success') {
+          statusText.textContent = 'Analysis Complete! Speaking over ESP32 Speaker...';
+        }
+      } catch (err) {
+        statusText.textContent = 'Error Sending Photo to PC';
+      }
+    });
+  </script>
+</body>
+</html>
