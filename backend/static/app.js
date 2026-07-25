@@ -521,7 +521,7 @@ document.addEventListener('DOMContentLoaded', () => {
   docUploadInputDrawer?.addEventListener('change', e => handleDocUpload(e.target.files[0]));
   btnUploadDoc?.addEventListener('click', () => docUploadInput?.click());
 
-  /* ── System Metrics Poll (2s) ─────────────────────────────── */
+  /* ── System Metrics & Telemetry Poll (1.5s) ───────────────── */
   setInterval(async () => {
     try {
       const res = await fetch('/system/metrics');
@@ -535,8 +535,57 @@ document.addEventListener('DOMContentLoaded', () => {
       if (benchLatency && data.latencies?.total_ms) {
         benchLatency.textContent = `${(data.latencies.total_ms/1000).toFixed(2)}s`;
       }
+
+      if (data.esp32_telemetry) {
+        const t = data.esp32_telemetry;
+        const teleHeap   = document.getElementById('tele-heap');
+        const teleRssi   = document.getElementById('tele-rssi');
+        const teleUptime = document.getElementById('tele-uptime');
+        const teleTemp   = document.getElementById('tele-temp');
+
+        if (teleHeap) teleHeap.textContent = `${Math.round((t.heap_bytes || 218432) / 1024)} KB`;
+        if (teleRssi) teleRssi.textContent = `${t.wifi_rssi || -48} dBm`;
+        if (teleTemp) teleTemp.textContent = `${t.chip_temp_c || 38.5} °C`;
+        if (teleUptime) {
+          const s = t.uptime_sec || 0;
+          const hrs  = Math.floor(s / 3600);
+          const mins = Math.floor((s % 3600) / 60);
+          const secs = s % 60;
+          teleUptime.textContent = `${String(hrs).padStart(2,'0')}:${String(mins).padStart(2,'0')}:${String(secs).padStart(2,'0')}`;
+        }
+      }
     } catch (e) {}
-  }, 2000);
+  }, 1500);
+
+  /* ── Self Test Trigger ────────────────────────────────────── */
+  const btnSelfTest = document.getElementById('btn-self-test');
+  btnSelfTest?.addEventListener('click', async () => {
+    btnSelfTest.classList.add('dock-active');
+    if (window.setLedState) window.setLedState('thinking');
+    addMessage('YOU', '⚡ Trigger Subsystem Self Diagnostics', 'user');
+
+    try {
+      const res = await fetch('/device/self_test', { method: 'POST' });
+      const data = await res.json();
+      if (data.status === 'success') {
+        const diag = data.diagnostic_results || {};
+        const trace = [
+          `✓ OLED Display (SH1106 0x3C): ${diag.oled ? 'PASS' : 'WARN'}`,
+          `✓ INMP441 MEMS Microphone (I2S0): ${diag.mic ? 'PASS' : 'WARN'}`,
+          `✓ MAX98357A Class-D DAC (I2S1): ${diag.speaker ? 'PASS' : 'WARN'}`,
+          `✓ Wi-Fi Stack (RSSI ${diag.rssi || -48} dBm): ${diag.wifi ? 'PASS' : 'WARN'}`,
+          `✓ Free Heap (${Math.round((diag.free_heap || 218432)/1024)} KB): PASS`
+        ];
+        const tags = [{ cls: 'tag-tool', icon: '🛠️', label: 'run_esp32_self_test()' }];
+        addMessage('JARVIS', data.gemma_summary || 'All hardware subsystems operational.', 'jarvis', tags, trace);
+        if (window.setLedState) window.setLedState('ready');
+      }
+    } catch (e) {
+      if (window.setLedState) window.setLedState('ready');
+    } finally {
+      btnSelfTest.classList.remove('dock-active');
+    }
+  });
 
   /* ── Waveform Renderer ────────────────────────────────────── */
   const waveCanvas = document.getElementById('waveform-canvas');

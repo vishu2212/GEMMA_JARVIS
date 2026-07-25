@@ -138,6 +138,31 @@
               <span class="hw-tag">16kHz</span>
               <span class="hw-tag">GPIO41</span>
             </div>
+        </div>
+
+        <!-- Live ESP32 Telemetry Card (Heartbeat) -->
+        <div style="background:var(--surface-1);border:1px solid var(--border);border-radius:var(--r-lg);overflow:hidden;flex-shrink:0;">
+          <div style="padding:10px 13px;border-bottom:1px solid var(--border);display:flex;align-items:center;justify-content:space-between;">
+            <span style="font-size:10px;font-weight:700;text-transform:uppercase;letter-spacing:0.08em;color:var(--text-3);">⚡ ESP32 Live Telemetry</span>
+            <span class="badge badge-green" id="esp32-heartbeat-badge">● Heartbeat 1s</span>
+          </div>
+          <div style="padding:11px 13px;display:grid;grid-template-columns:1fr 1fr;gap:8px;">
+            <div>
+              <div style="font-size:9.5px;color:var(--text-3);font-weight:700;text-transform:uppercase;">Free Heap</div>
+              <div style="font-size:13.5px;font-weight:700;font-family:var(--mono);color:var(--cyan);" id="tele-heap">218 KB</div>
+            </div>
+            <div>
+              <div style="font-size:9.5px;color:var(--text-3);font-weight:700;text-transform:uppercase;">Wi-Fi RSSI</div>
+              <div style="font-size:13.5px;font-weight:700;font-family:var(--mono);color:var(--green);" id="tele-rssi">-48 dBm</div>
+            </div>
+            <div>
+              <div style="font-size:9.5px;color:var(--text-3);font-weight:700;text-transform:uppercase;">Uptime</div>
+              <div style="font-size:13.5px;font-weight:700;font-family:var(--mono);color:var(--text-1);" id="tele-uptime">00:02:14</div>
+            </div>
+            <div>
+              <div style="font-size:9.5px;color:var(--text-3);font-weight:700;text-transform:uppercase;">Chip Temp</div>
+              <div style="font-size:13.5px;font-weight:700;font-family:var(--mono);color:var(--amber);" id="tele-temp">38.5 °C</div>
+            </div>
           </div>
         </div>
 
@@ -401,6 +426,9 @@
     </button>
     <button class="dock-btn" id="btn-controls">
       <span class="dock-icon">🎛️</span> Controls
+    </button>
+    <button class="dock-btn" id="btn-self-test">
+      <span class="dock-icon">⚡</span> Self Test
     </button>
     <button class="dock-btn" id="btn-voice-dock">
       <span class="dock-icon">🎤</span> Voice
