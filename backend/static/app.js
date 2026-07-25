@@ -135,7 +135,17 @@ document.addEventListener('DOMContentLoaded', () => {
       setPipelineStage('pipe-esp32');
 
       if (data.status === 'success') {
-        diagnosisBox.innerHTML = `<p>${data.raw_analysis}</p>`;
+        const traceList = document.getElementById('reasoning-trace-list');
+        const rawContent = document.getElementById('raw-analysis-content');
+        if (data.reasoning_trace && traceList) {
+          traceList.innerHTML = data.reasoning_trace.map(t => {
+            const cls = t.startsWith('✓') ? 'ok' : 'err';
+            return `<div class="trace-item ${cls}">${t}</div>`;
+          }).join('');
+        }
+        if (rawContent) {
+          rawContent.innerHTML = `<p>${data.raw_analysis}</p>`;
+        }
         addChatMessage('Gemma 4 Mobile Vision', data.raw_analysis, 'bot-msg');
 
         severityDetail.textContent = data.severity;
@@ -428,6 +438,31 @@ document.addEventListener('DOMContentLoaded', () => {
       sendOledText(text);
     });
   });
+
+  // 11. Developer Observability Telemetry Polling Loop
+  setInterval(async () => {
+    try {
+      const res = await fetch('/system/metrics');
+      if (res.ok) {
+        const data = await res.json();
+        const obsCpu = document.getElementById('obs-cpu');
+        const obsRam = document.getElementById('obs-ram');
+        const obsRag = document.getElementById('obs-rag');
+        const obsTools = document.getElementById('obs-tools');
+        const obsTokens = document.getElementById('obs-tokens');
+        const benchLatency = document.getElementById('bench-latency');
+
+        if (obsCpu) obsCpu.textContent = `${data.cpu_load_pct}%`;
+        if (obsRam) obsRam.textContent = `${data.ram_free_gb} GB`;
+        if (obsRag) obsRag.textContent = `${data.rag_docs_count} Loaded`;
+        if (obsTools) obsTools.textContent = `${data.active_tools_count} Tools`;
+        if (obsTokens) obsTokens.textContent = data.total_conversation_tokens.toLocaleString();
+        if (benchLatency && data.latencies && data.latencies.total_ms) {
+          benchLatency.textContent = `${(data.latencies.total_ms / 1000).toFixed(2)} s`;
+        }
+      }
+    } catch (e) {}
+  }, 2000);
 
   // Volume Slider
   volSlider.addEventListener('input', (e) => {
