@@ -37,7 +37,7 @@ class Settings(BaseModel):
     
     # Paths
     BASE_DIR: Path = Path(__file__).resolve().parent
-    TEMP_DIR: Path = BASE_DIR / "temp"
+    TEMP_DIR: Path = Path("/tmp") if os.getenv("VERCEL") else (BASE_DIR / "temp")
     TEMP_AUDIO_DIR: Path = TEMP_DIR / "audio"
     KNOWLEDGE_DOCS_DIR: Path = BASE_DIR / "knowledge_documents"
     COMPILED_KNOWLEDGE_PATH: Path = TEMP_DIR / "compiled_knowledge.txt"
